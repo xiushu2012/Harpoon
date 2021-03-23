@@ -1,0 +1,196 @@
+bond_id                 123076                                                     123057                                             
+bond_nm                 强力转债                                                  美联转债            转债名称                               
+stock_id                sz300429                                                  sz300586            正股代码                       
+stock_nm                强力新材                                                  美联新材            正股名称                       
+btype                   C                                                         C                                                  
+convert_price           18.98                                                     9.91                转股价格                              
+convert_price_valid_from                                                                                                             
+convert_dt              2021-05-25                                                2021-01-07                                         
+maturity_dt             2026-11-18                                                2026-06-30                                         
+next_put_dt             2024-11-18                                                2024-07-01                                         
+put_dt                                                                                                                               
+put_notes                                                                                                                            
+put_price               100.000                                                   100.000            回售价格                                
+put_inc_cpn_fl          y                                                         y                                                  
+put_convert_price_ratio 124.05                                                    83.18                                              
+put_count_days          30                                                        30                                                 
+put_total_days          30                                                        30                                                 
+put_real_days           0                                                         0                                                  
+repo_discount_rt        0.00                                                      0.00                                               
+repo_valid_from                                                                                                                      
+repo_valid_to                                                                                                                        
+turnover_rt             0.57                                                      81.83            换手率                                 
+redeem_price            113.000                                                   112.000          赎回价                                  
+redeem_inc_cpn_fl       n                                                         n                                                  
+redeem_price_ratio      130.000                                                   130.000          强赎触发股价                                  
+redeem_count_days       15                                                        15               强赎时间触发阈值                                  
+redeem_total_days       30                                                        30               强赎时间触发范围                                  
+redeem_real_days        0                                                         0                                                  
+redeem_dt                                                                                                                            
+redeem_flag             X                                                         X                 ! 公告不强赎 ! 已满足强赎条件 ! 公告要强赎 ! 已公告强赎/临近到期                                  
+orig_iss_amt            8.500                                                     2.070             发行规模                                 
+curr_iss_amt            8.500                                                     2.067             剩余规模                                
+rating_cd               AA-                                                       AA-               评级                                            
+issuer_rating_cd        AA-                                                       AA-                                                
+guarantor               无担保                                                    无担保            有无担保                                 
+ssc_dt                                                                                                                               
+esc_dt                                                                                                                               
+sc_notes                                                                                                                             
+market_cd               szcy                                                      szcy                                               
+force_redeem                                                                                                                         
+real_force_redeem_price                                                                                                              
+convert_cd              未到转股期                                                123057            是否可转股                                   
+repo_cd                                                                                                                              
+ration                                                                                                                               
+ration_cd               380429                                                    380586                                             
+apply_cd                370429                                                    370586                                             
+online_offline_ratio                                                                                                                 
+qflag                   N                                                         N                                                  
+qflag2                  N                                                         N                                                  
+ration_rt               65.070                                                    82.410                                             
+fund_rt                 buy                                                       -                                                  
+margin_flg              R                                                                                                            
+lt_bps                                                                                                                               
+pb                      3.19                                                      4.83                                               
+pb_flag                 N                                                         N                                                  
+total_shares            515253388.0                                               456003034.0                                        
+float_shares            316694374.0                                               288979609.0                                        
+sqflg                   Y                                                         Y                                                  
+sprice                  10.71                                                     8.34          正股价格                                     
+svolume                 6003.25                                                   13408.73                                           
+sincrease_rt            0.00%                                                     -0.83%                                             
+qstatus                 00                                                        00                                                 
+bond_value              buy                                                       buy                                                
+bond_value2             buy                                                       buy                                                
+volatility_rate         buy                                                       buy                                                
+last_time               15:00:03                                                  15:00:03                                           
+convert_value           56.43                                                     84.16         转股价值                                     
+premium_rt              65.53%                                                    24.21%        溢价率                                     
+year_left               5.671                                                     5.288         剩余期限                                     
+ytm_rt                  4.37%                                                     2.41%         到期年化收益率                                     
+ytm_rt_tax              3.77%                                                     1.78%                                              
+price                   93.405                                                    104.530       当前价格（用当前价格和年化收益率（到期利率）、剩余时间可以计算出最后的票面收益，通过票面收益以即期利率(10年期国债收益)作为贴现率计算出债券的现值）                                     
+full_price              93.405                                                    104.530                                            
+increase_rt             0.59%                                                     0.03%                                              
+volume                  455.59                                                    18158.59                                           
+convert_price_valid     Y                                                         Y                                                  
+adj_scnt                0                                                         0                                                  
+adj_cnt                 0                                                         0                                                  
+redeem_icon                                                                                                                          
+ref_yield_info          -                                                         -                                                  
+adjust_tip                                                                                                                           
+adjusted                N                                                         N                                                  
+option_tip              -                                                         -                                                  
+bond_value3             buy                                                       buy                                                
+left_put_year           -                                                         -                                                  
+short_maturity_dt       26-11-18                                                  26-06-30       到期日期                                    
+dblow                   158.94                                                    128.74                                             
+force_redeem_price      24.67                                                     12.88          强赎触发价格                                      
+put_convert_price       13.29                                                     6.94           回售触发价格                        
+convert_amt_ratio       25.1%                                                     8.6%                                               
+convert_amt_ratio2      15.4%                                                     5.4%                                               
+convert_amt_ratio_tips  "转债占流动市值比：25.1%转债占总市值比：15.4%"            "转债占流动市值比：8.6%转债占总市值比：5.4%"       
+stock_net_value         0.00                                                      0.00                                               
+stock_cd                300429                                                    300586          正股代码                                   
+pre_bond_id             sz123076                                                  sz123057                                           
+repo_valid              有效期：-                                                 有效期：-                                          
+convert_cd_tip          未到转股期；2021-05-25 开始转股                           123057；2021-01-07 开始转股                        
+price_tips              全价：93.405 最后更新：15:00:03                           全价：104.530 最后更新：15:00:03                   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
