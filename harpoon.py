@@ -101,13 +101,16 @@ if __name__=='__main__':
     bond_cov_jsl_df['转股溢价率'] = bond_cov_jsl_df.apply(lambda row: calc_stock_overflow(row['转股溢价率']), axis=1)
 
     bond_cov_jsl_df['估值距离'] = bond_cov_jsl_df.apply(lambda row: calc_value_distance(row['转股溢价率'], row['纯债溢价率'],va,vb), axis=1)
-    bond_expect_sort_df = bond_cov_jsl_df.sort_values('估值距离',ascending=True)
+    #bond_expect_sort_df = bond_cov_jsl_df.sort_values('估值距离',ascending=True)
+    bond_expect_sort_df = bond_cov_jsl_df.sort_values('发行规模', ascending=True)
     bond_expect_sort_df = bond_expect_sort_df[['转债名称','正股代码','到期年化','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','最新价','发行规模','评级','担保情况','剩余期限','转股提示','下修次数','成功次数','强赎公告']]
 
     bond_expect_startup_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^3.*?')]
     bond_expect_smallboard_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^0.*?')]
     bond_expect_bigboard_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^6.*?')]
 
+    #bond_expect_selected_df = bond_expect_sort_df[bond_expect_sort_df['发行规模'] <= 4.0 & bond_expect_sort_df['最新价'] <= 110.0 & bond_expect_sort_df['估值距离'] <= 20.0]
+    bond_expect_selected_df = bond_expect_sort_df[(bond_expect_sort_df['发行规模'] <= 4.0) & (bond_expect_sort_df['估值距离'] <= 30.0) & (bond_expect_sort_df['最新价'] <= 110.0)]
     fileout = tnow.strftime('%Y_%m_%d') + '_out.xls'
     outanalypath =  "%s/%s" % (filefolder,fileout)
     writer = pd.ExcelWriter(outanalypath)
@@ -115,6 +118,7 @@ if __name__=='__main__':
     bond_expect_startup_df.to_excel(writer,'startup')
     bond_expect_smallboard_df.to_excel(writer,'smallboard')
     bond_expect_bigboard_df.to_excel(writer,'bigboard')
+    bond_expect_selected_df.to_excel(writer,'selected')
     writer.save()
     print("value distance of  'unlist and analye' :" + fileout)
 
