@@ -46,7 +46,7 @@ if __name__=='__main__':
 			print("please run like 'python Volume.py [sh113542]'")
 			exit(1)
 
-		bond_kelly_df = pd.DataFrame(columns=['可转债','赔率','胜率','下注比例','当前价格','25分位','50分位','75分位'])
+		bond_kelly_df = pd.DataFrame(columns=['可转债','胜率','赔率1','下注比例1','赔率2','下注比例2','当前价格','最小','25分位','50分位','75分位'])
 		for bond in bondarray:
 			dailypath =  "./bond/%s.xls" % (bond)
 			resultpath,insheetname = get_akshare_daily(dailypath,bond)
@@ -54,18 +54,18 @@ if __name__=='__main__':
 
 			bond_cov_daily_df = pd.read_excel(resultpath, insheetname)[['date', 'close']]
 			dailysta = bond_cov_daily_df['close'].describe()
-			#print(dailysta)
+			print(dailysta)
 			counts = dailysta['count']
 			date = bond_cov_daily_df.loc[counts-1][0]
 			value = bond_cov_daily_df.loc[counts-1][1]
 
-
-
+			valuemin = dailysta['min']
 			value25 = dailysta['25%']
 			value75 = dailysta['75%']
 			value50 = dailysta['50%']
 			#赔率=获胜时的盈利/失败时的亏损
-			kellyb = (value75-value)/(value - value25)
+			kellyb1 = (value75-value)/(value - value25)
+			kellyb2 = (value50-value) /(value - valuemin)
 
 			print("value25 and value75:", value25, value75)
 
@@ -75,9 +75,11 @@ if __name__=='__main__':
 			kellyp = wincounts / counts
 
 			#下注比例
-			kellyf = ((kellyb+1)*kellyp-1)/kellyb
-			bond_kelly_df = bond_kelly_df.append({'可转债':bond,'赔率':kellyb,'胜率':kellyp,'下注比例':kellyf,'当前价格':value,'25分位':value25,'50分位':value50,'75分位':value75},ignore_index=True)
-			print("可转债,赔率,胜率,下注比例:",bond,kellyb,kellyp,kellyf)
+			kellyf1 = ((kellyb1+1)*kellyp-1)/kellyb1
+			kellyf2 = ((kellyb2+1)*kellyp-1)/kellyb2
+
+			bond_kelly_df = bond_kelly_df.append({'可转债':bond,'胜率':kellyp,'赔率1':kellyb1,'下注比例1':kellyf1,'赔率2':kellyb2,'下注比例2':kellyf2,'当前价格':value,'最小':valuemin,'25分位':value25,'50分位':value50,'75分位':value75},ignore_index=True)
+			print("可转债,胜率，赔率1,下注比例1,赔率2,下注比例2:",bond,kellyp,kellyb1,kellyf1,kellyb2,kellyf2)
 		#print(bond_kelly_df)
 		tnow = datetime.datetime.now()
 		fileout = tnow.strftime('%Y_%m_%d') + '_kelly.xls'
