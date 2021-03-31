@@ -93,8 +93,8 @@ if __name__=='__main__':
     print("the average of unlisted bond 转股溢价率,纯债溢价率",va,vb)
 
 
-    bond_cov_jsl_df = pd.read_excel(resultpath, insheetname,converters={'stock_cd':str})[['bond_nm', 'stock_cd','orig_iss_amt','rating_cd','guarantor','price','year_left','ytm_rt','convert_value','premium_rt','force_redeem','convert_cd_tip','adj_cnt','adj_scnt']]
-    bond_cov_jsl_df.rename(columns={'bond_nm': '转债名称', 'stock_cd': '正股代码','orig_iss_amt':'发行规模','rating_cd':'评级','guarantor':'担保情况','price':'最新价','year_left':'剩余期限','ytm_rt':'到期年化','convert_value':'转股价值','premium_rt':'转股溢价率','force_redeem':'强赎公告','convert_cd_tip':'转股提示','adj_cnt':'下修次数','adj_scnt':'成功次数'}, inplace=True)
+    bond_cov_jsl_df = pd.read_excel(resultpath, insheetname,converters={'stock_cd':str})[['bond_nm', 'stock_cd','orig_iss_amt','rating_cd','guarantor','price','year_left','ytm_rt','convert_value','premium_rt','force_redeem','convert_cd_tip','adj_cnt','adj_scnt','pre_bond_id']]
+    bond_cov_jsl_df.rename(columns={'bond_nm': '转债名称', 'stock_cd': '正股代码','orig_iss_amt':'发行规模','rating_cd':'评级','guarantor':'担保情况','price':'最新价','year_left':'剩余期限','ytm_rt':'到期年化','convert_value':'转股价值','premium_rt':'转股溢价率','force_redeem':'强赎公告','convert_cd_tip':'转股提示','adj_cnt':'下修次数','adj_scnt':'成功次数','pre_bond_id':'转债代码'}, inplace=True)
 
     bond_cov_jsl_df['纯债价值'] = bond_cov_jsl_df.apply(lambda row: calc_bond_value(row['最新价'],row['到期年化'],row['剩余期限']), axis=1)
     bond_cov_jsl_df['纯债溢价率'] = bond_cov_jsl_df.apply(lambda row: calc_bond_overflow(row['最新价'],row['纯债价值']), axis=1)
@@ -103,7 +103,7 @@ if __name__=='__main__':
     bond_cov_jsl_df['估值距离'] = bond_cov_jsl_df.apply(lambda row: calc_value_distance(row['转股溢价率'], row['纯债溢价率'],va,vb), axis=1)
     #bond_expect_sort_df = bond_cov_jsl_df.sort_values('估值距离',ascending=True)
     bond_expect_sort_df = bond_cov_jsl_df.sort_values('发行规模', ascending=True)
-    bond_expect_sort_df = bond_expect_sort_df[['转债名称','正股代码','到期年化','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','最新价','发行规模','评级','担保情况','剩余期限','转股提示','下修次数','成功次数','强赎公告']]
+    bond_expect_sort_df = bond_expect_sort_df[['转债代码','转债名称','正股代码','到期年化','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','最新价','发行规模','评级','担保情况','剩余期限','转股提示','下修次数','成功次数','强赎公告']]
 
     bond_expect_startup_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^3.*?')]
     bond_expect_smallboard_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^0.*?')]
@@ -130,9 +130,9 @@ if __name__=='__main__':
     #bond_expect_sort_df.plot.scatter(x='纯债溢价率', y='转股溢价率')
     X = bond_expect_sort_df.values
     #plt.plot(X[:,6], X[:,4],"ro")
-    txt = X[:,0].reshape(1, -1)[0]
-    x = X[:,6].reshape(1, -1)[0]
-    y = X[:,4].reshape(1, -1)[0]
+    txt = X[:,1].reshape(1, -1)[0]
+    x = X[:,7].reshape(1, -1)[0]
+    y = X[:,5].reshape(1, -1)[0]
     plt.scatter(x,y)
     for i in range(len(txt)):
         plt.annotate(txt[i][0:2], xy = (x[i],y[i]), xytext = (x[i]+0.1, y[i]+0.1)) #这里xy是需要标记的坐标，xytext是对应的标签坐标
