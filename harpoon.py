@@ -112,6 +112,9 @@ if __name__=='__main__':
     #bond_expect_selected_df = bond_expect_sort_df[bond_expect_sort_df['发行规模'] <= 4.0 & bond_expect_sort_df['最新价'] <= 110.0 & bond_expect_sort_df['估值距离'] <= 20.0]
     bond_expect_selected_df = bond_expect_startup_df[(bond_expect_startup_df['发行规模'] <= 4.0)  & (bond_expect_startup_df['最新价'] <= 110.0)]
     bond_expect_selected_df = bond_expect_selected_df.sort_values('估值距离',ascending=True)
+    
+    bond_expect_candidate_df = bond_expect_smallboard_df[(bond_expect_smallboard_df['发行规模'] <= 4.0)  & (bond_expect_smallboard_df['最新价'] <= 110.0)]
+    bond_expect_candidate_df = bond_expect_candidate_df.sort_values('估值距离',ascending=True)
 
     fileout = tnow.strftime('%Y_%m_%d') + '_out.xls'
     outanalypath =  "%s/%s" % (filefolder,fileout)
@@ -121,6 +124,7 @@ if __name__=='__main__':
     bond_expect_smallboard_df.to_excel(writer,'smallboard')
     bond_expect_bigboard_df.to_excel(writer,'bigboard')
     bond_expect_selected_df.to_excel(writer,'selected')
+    bond_expect_candidate_df.to_excel(writer,'candidate')
     writer.save()
     print("value distance of  'unlist and analye' :" + fileout)
 
