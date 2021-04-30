@@ -34,6 +34,23 @@ def get_akshare_daily(xlsfile,stock):
 	
 	return xlsfile,shname
 
+def getkellyb(value,v0,v25,v50,v75):
+	# 赔率=获胜时的盈利/失败时的亏损
+	kellyb1 = 0.1
+	kellyb2 = 0.2
+	if value <= v0:
+		kellyb1 = (v50 - value) / (value - 1)
+		kellyb2 = (v75 - value) / (value - 1)
+	elif value > v0  and  value <= v50:
+		kellyb1 = (v50 - value) / (value - v0)
+		kellyb2 = (v75 - value) / (value - v0)
+	else:
+		kellyb1 = 0.1
+		kellyb2 = 0.2
+	print("valule0,value25,value50,value75:", v0,v25,v50,v75)
+	return kellyb1,kellyb2
+
+
 
 if __name__=='__main__':
 
@@ -61,13 +78,11 @@ if __name__=='__main__':
 
 			valuemin = dailysta['min']
 			value25 = dailysta['25%']
-			value75 = dailysta['75%']
 			value50 = dailysta['50%']
-			#赔率=获胜时的盈利/失败时的亏损
-			kellyb1 = (value75-value)/(value - value25)
-			kellyb2 = (value50-value) /(value - valuemin)
+			value75 = dailysta['75%']
 
-			print("value25 and value75:", value25, value75)
+			# 赔率=获胜时的盈利/失败时的亏损
+			kellyb1,kellyb2 = getkellyb(value,valuemin, value25, value50, value75)
 
 			price =  bond_cov_daily_df['close']
 			wincounts = price[ price > value ].count()
