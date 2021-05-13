@@ -29,9 +29,9 @@ def get_akshare_daily(xlsfile,stock):
 def calc_bond_gains(bond_daily_df,floor,roof,price):
 
 	print("premium-floor-roof  :", floor, roof)
-	print("date-premium-price:", bond_daily_df.iloc[-1]['date'],
-		  						bond_daily_df.iloc[-1]['premium'],
-		  						bond_daily_df.iloc[-1][price])
+	datetoday = bond_daily_df.iloc[-1]['date']
+	premtoday = bond_daily_df.iloc[-1]['premium']
+	pircetoday = bond_daily_df.iloc[-1][price]
 
 	bond_daily_low =  bond_daily_df[bond_daily_df['premium'] < floor]
 	bond_daily_high = bond_daily_df[bond_daily_df['premium'] > roof]
@@ -55,7 +55,7 @@ def calc_bond_gains(bond_daily_df,floor,roof,price):
 
 	gaindays = (bond_daily_df.iloc[-1]['date'] - bond_daily_df.iloc[0]['date']).days
 	peryear =  np.e**(np.log(total)/(gaindays/365)) - 1
-	return total,peryear
+	return total,peryear,datetoday,premtoday,pircetoday
 
 
 def calc_bond_overflow(price,bondvalue):
@@ -107,7 +107,7 @@ if __name__=='__main__':
 
 
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
-		bond_welfare_df = pd.DataFrame(columns=['name','totalgains','pergains','floor','roof'])
+		bond_welfare_df = pd.DataFrame(columns=['name','totalgains','pergains','floor','roof','datetoday','premtoday','pircetoday'])
 		for i, bondrow in bond_interest_df.iterrows():
 			name = bondrow['name'];code = bondrow['code'];lastdate = bondrow['maturity']
 			year_return_df = calc_return_year(lastdate, bondrow['rt1'], bondrow['rt2'], bondrow['rt3'],bondrow['rt4'], bondrow['rt5'], bondrow['rt6'])
@@ -125,11 +125,11 @@ if __name__=='__main__':
 			value25 = dailysta['25%'];value50 = dailysta['50%'];value75 = dailysta['75%']
 			print("value25-value50-value75:",value25,value50,value75)
 
-			total50,peryear50 = calc_bond_gains(bond_cov_daily_df,value25,value50,price)
-			bond_welfare_df = bond_welfare_df.append({'name':name,'totalgains':total50,'pergains':peryear50,'floor':value25,'roof':value50},ignore_index=True)
+			total50,peryear50,datetoday,premtoday,pircetoday = calc_bond_gains(bond_cov_daily_df,value25,value50,price)
+			bond_welfare_df = bond_welfare_df.append({'name':name,'totalgains':total50,'pergains':peryear50,'floor':value25,'roof':value50,'datetoday':datetoday,'premtoday':premtoday,'pircetoday':pircetoday},ignore_index=True)
 
-			total75,peryear75= calc_bond_gains(bond_cov_daily_df, value25, value75,price)
-			bond_welfare_df = bond_welfare_df.append({'name': name, 'totalgains': total75, 'pergains': peryear75,'floor':value25,'roof':value75},ignore_index=True)
+			total75,peryear75,datetoday,premtoday,pircetoday= calc_bond_gains(bond_cov_daily_df, value25, value75,price)
+			bond_welfare_df = bond_welfare_df.append({'name':name,'totalgains':total75,'pergains': peryear75,'floor':value25,'roof':value75,'datetoday':datetoday,'premtoday':premtoday,'pircetoday':pircetoday},ignore_index=True)
 			print("###############################################")
 		print(bond_welfare_df)
 		tnow = datetime.datetime.now()
