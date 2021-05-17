@@ -75,8 +75,8 @@ def calc_bond_value(date,yeardf):
 
 	return totaldiscounts
 
-def get_daily_df(path,name):
-	newcolumn = 'money'
+def get_daily_df(path,name,price):
+	newcolumn = price
 	bond_cov_daily_df_open = pd.read_excel(path, name)[['date', 'open']]
 	lenopen = len(bond_cov_daily_df_open);
 	bond_cov_daily_df_open.index = range(0, lenopen)
@@ -98,9 +98,9 @@ def get_daily_df(path,name):
 	bond_cov_daily_df_close = bond_cov_daily_df_close.rename(columns={'close': newcolumn})
 
 	bond_cov_daily_df = pd.concat([bond_cov_daily_df_open, bond_cov_daily_df_low, bond_cov_daily_df_high, bond_cov_daily_df_close])
-	return bond_cov_daily_df,newcolumn
+	return bond_cov_daily_df
 
-def get_daily_df_price(path,name,price):
+def get_daily_df_old(path,name,price):
 	bond_cov_daily_df = pd.read_excel(path, name)[['date', price]]
 	return bond_cov_daily_df
 
@@ -125,12 +125,13 @@ if __name__=='__main__':
 			print("please make sure the ./interest.xls")
 			exit(1)
 
-		price = 'open'
+		price = ''
 		if len(argv) > 1:
 			price = argv[1]
 			print("computer price is:",price)
 		else:
-			print("computer price is: 'open'")
+			price = "money"
+			print("computer price is: 'money'")
 
 
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
@@ -144,8 +145,8 @@ if __name__=='__main__':
 
 			print("data of path:" + resultpath + ",sheetname:" +insheetname)
 
-			#bond_cov_daily_df = get_daily_df_price(resultpath, insheetname,price)
-			bond_cov_daily_df,price = get_daily_df(resultpath, insheetname)
+			#bond_cov_daily_df = get_daily_df_old(resultpath, insheetname,price)
+			bond_cov_daily_df = get_daily_df(resultpath, insheetname,price)
 
 			bond_cov_daily_df['value'] =   bond_cov_daily_df.apply(lambda row: calc_bond_value(row['date'],year_return_df), axis=1)
 			bond_cov_daily_df['premium'] = bond_cov_daily_df.apply(lambda row: calc_bond_overflow(row[price], row['value']),axis=1)
