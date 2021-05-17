@@ -61,7 +61,7 @@ def calc_bond_gains(bond_daily_df,floor,roof,price):
 def calc_bond_overflow(price,bondvalue):
 	return 100 * (price - bondvalue) / bondvalue
 
-def calc_bond_value(date,price,yeardf):
+def calc_bond_value(date,yeardf):
 	yearresdf = yeardf[ yeardf['year'] > date ]
 
 	totaldiscounts = 0.0;calyears = 0
@@ -73,9 +73,36 @@ def calc_bond_value(date,price,yeardf):
 	captialdiscounts = 100 / (1 + 0.04) ** calyears
 	totaldiscounts = captialdiscounts + totaldiscounts
 
-	#print(date,price,totaldiscounts)
 	return totaldiscounts
 
+def get_daily_df(path,name):
+	newcolumn = 'money'
+	bond_cov_daily_df_open = pd.read_excel(path, name)[['date', 'open']]
+	lenopen = len(bond_cov_daily_df_open);
+	bond_cov_daily_df_open.index = range(0, lenopen)
+	bond_cov_daily_df_open = bond_cov_daily_df_open.rename(columns={'open':newcolumn})
+
+	bond_cov_daily_df_low = pd.read_excel(path, name)[['date', 'low']]
+	lenlow = len(bond_cov_daily_df_low);
+	bond_cov_daily_df_low.index = range(lenopen, lenopen + lenlow)
+	bond_cov_daily_df_low = bond_cov_daily_df_low.rename(columns={'low': newcolumn})
+
+	bond_cov_daily_df_high = pd.read_excel(path, name)[['date', 'high']]
+	lenhigh = len(bond_cov_daily_df_high);
+	bond_cov_daily_df_high.index = range(lenopen + lenlow, lenopen + lenlow + lenhigh)
+	bond_cov_daily_df_high = bond_cov_daily_df_high.rename(columns={'high': newcolumn})
+
+	bond_cov_daily_df_close = pd.read_excel(path, name)[['date', 'close']]
+	lenclose = len(bond_cov_daily_df_close);
+	bond_cov_daily_df_close.index = range(lenopen + lenlow + lenhigh, lenopen + lenlow + lenhigh + lenclose)
+	bond_cov_daily_df_close = bond_cov_daily_df_close.rename(columns={'close': newcolumn})
+
+	bond_cov_daily_df = pd.concat([bond_cov_daily_df_open, bond_cov_daily_df_low, bond_cov_daily_df_high, bond_cov_daily_df_close])
+	return bond_cov_daily_df,newcolumn
+
+def get_daily_df_price(path,name,price):
+	bond_cov_daily_df = pd.read_excel(path, name)[['date', price]]
+	return bond_cov_daily_df
 
 def calc_return_year(lastdate,rt1,rt2,rt3,rt4,rt5,rt6):
 	year6 = lastdate
@@ -117,8 +144,10 @@ if __name__=='__main__':
 
 			print("data of path:" + resultpath + ",sheetname:" +insheetname)
 
-			bond_cov_daily_df = pd.read_excel(resultpath, insheetname)[['date', price]]
-			bond_cov_daily_df['value'] =   bond_cov_daily_df.apply(lambda row: calc_bond_value(row['date'], row[price], year_return_df), axis=1)
+			#bond_cov_daily_df = get_daily_df_price(resultpath, insheetname,price)
+			bond_cov_daily_df,price = get_daily_df(resultpath, insheetname)
+
+			bond_cov_daily_df['value'] =   bond_cov_daily_df.apply(lambda row: calc_bond_value(row['date'],year_return_df), axis=1)
 			bond_cov_daily_df['premium'] = bond_cov_daily_df.apply(lambda row: calc_bond_overflow(row[price], row['value']),axis=1)
 
 			dailysta = bond_cov_daily_df['premium'].describe()
