@@ -135,7 +135,7 @@ if __name__=='__main__':
 
 
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
-		bond_welfare_df = pd.DataFrame(columns=['name','totalgains','pergains','floor','roof','datetoday','premtoday','pircetoday'])
+		bond_welfare_df = pd.DataFrame(columns=['code','name','totalgains','pergains','floor','roof','datetoday','premtoday','pircetoday'])
 		for i, bondrow in bond_interest_df.iterrows():
 			name = bondrow['name'];code = bondrow['code'];lastdate = bondrow['maturity']
 			year_return_df = calc_return_year(lastdate, bondrow['rt1'], bondrow['rt2'], bondrow['rt3'],bondrow['rt4'], bondrow['rt5'], bondrow['rt6'])
@@ -156,10 +156,10 @@ if __name__=='__main__':
 			print("value25-value50-value75:",value25,value50,value75)
 
 			total50,peryear50,datetoday,premtoday,pircetoday = calc_bond_gains(bond_cov_daily_df,value25,value50,price)
-			bond_welfare_df = bond_welfare_df.append({'name':name,'totalgains':total50,'pergains':peryear50,'floor':value25,'roof':value50,'datetoday':datetoday,'premtoday':premtoday,'pircetoday':pircetoday},ignore_index=True)
+			bond_welfare_df = bond_welfare_df.append({'code':code,'name':name,'totalgains':total50,'pergains':peryear50,'floor':value25,'roof':value50,'datetoday':datetoday,'premtoday':premtoday,'pircetoday':pircetoday},ignore_index=True)
 
 			total75,peryear75,datetoday,premtoday,pircetoday= calc_bond_gains(bond_cov_daily_df, value25, value75,price)
-			bond_welfare_df = bond_welfare_df.append({'name':name,'totalgains':total75,'pergains': peryear75,'floor':value25,'roof':value75,'datetoday':datetoday,'premtoday':premtoday,'pircetoday':pircetoday},ignore_index=True)
+			bond_welfare_df = bond_welfare_df.append({'code':code,'name':name,'totalgains':total75,'pergains': peryear75,'floor':value25,'roof':value75,'datetoday':datetoday,'premtoday':premtoday,'pircetoday':pircetoday},ignore_index=True)
 			print("###############################################")
 		print(bond_welfare_df)
 		tnow = datetime.datetime.now()
