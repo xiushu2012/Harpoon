@@ -50,6 +50,30 @@ def getkellyb(value,v0,v25,v50,v75):
 	print("valule0,value25,value50,value75:", v0,v25,v50,v75)
 	return kellyb1,kellyb2
 
+def get_daily_df(path,name,price):
+	newcolumn = price
+	bond_cov_daily_df_open = pd.read_excel(path, name)[['date', 'open']]
+	lenopen = len(bond_cov_daily_df_open);
+	bond_cov_daily_df_open.index = range(0, lenopen)
+	bond_cov_daily_df_open = bond_cov_daily_df_open.rename(columns={'open':newcolumn})
+
+	bond_cov_daily_df_low = pd.read_excel(path, name)[['date', 'low']]
+	lenlow = len(bond_cov_daily_df_low);
+	bond_cov_daily_df_low.index = range(lenopen, lenopen + lenlow)
+	bond_cov_daily_df_low = bond_cov_daily_df_low.rename(columns={'low': newcolumn})
+
+	bond_cov_daily_df_high = pd.read_excel(path, name)[['date', 'high']]
+	lenhigh = len(bond_cov_daily_df_high);
+	bond_cov_daily_df_high.index = range(lenopen + lenlow, lenopen + lenlow + lenhigh)
+	bond_cov_daily_df_high = bond_cov_daily_df_high.rename(columns={'high': newcolumn})
+
+	bond_cov_daily_df_close = pd.read_excel(path, name)[['date', 'close']]
+	lenclose = len(bond_cov_daily_df_close);
+	bond_cov_daily_df_close.index = range(lenopen + lenlow + lenhigh, lenopen + lenlow + lenhigh + lenclose)
+	bond_cov_daily_df_close = bond_cov_daily_df_close.rename(columns={'close': newcolumn})
+
+	bond_cov_daily_df = pd.concat([bond_cov_daily_df_open, bond_cov_daily_df_low, bond_cov_daily_df_high, bond_cov_daily_df_close])
+	return bond_cov_daily_df
 
 
 if __name__=='__main__':
@@ -64,13 +88,18 @@ if __name__=='__main__':
 			exit(1)
 
 		bond_kelly_df = pd.DataFrame(columns=['可转债','胜率','赔率1','下注比例1','赔率2','下注比例2','当前价格','最小','25分位','50分位','75分位'])
+		money = 'money'
 		for bond in bondarray:
 			dailypath =  "./bond/%s.xls" % (bond)
 			resultpath,insheetname = get_akshare_daily(dailypath,bond)
 			print("data of path:" + resultpath + ",sheetname:" +insheetname)
 
-			bond_cov_daily_df = pd.read_excel(resultpath, insheetname)[['date', 'close']]
-			dailysta = bond_cov_daily_df['close'].describe()
+
+			#bond_cov_daily_df = pd.read_excel(resultpath, insheetname)[['date', 'close']]
+			#dailysta = bond_cov_daily_df['close'].describe()
+			bond_cov_daily_df = get_daily_df(resultpath, insheetname, money)
+			dailysta = bond_cov_daily_df[money].describe()
+
 			print(dailysta)
 			counts = dailysta['count']
 			date = bond_cov_daily_df.loc[counts-1][0]
@@ -84,7 +113,7 @@ if __name__=='__main__':
 			# 赔率=获胜时的盈利/失败时的亏损
 			kellyb1,kellyb2 = getkellyb(value,valuemin, value25, value50, value75)
 
-			price =  bond_cov_daily_df['close']
+			price =  bond_cov_daily_df[money]
 			wincounts = price[ price > value ].count()
 			#成功总次数/(成功总次数+失败总次数)
 			kellyp = wincounts / counts
