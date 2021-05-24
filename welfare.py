@@ -32,6 +32,7 @@ def calc_bond_gains(bond_daily_df,floor,roof,price):
 	datetoday = bond_daily_df.iloc[-1]['date']
 	premtoday = bond_daily_df.iloc[-1]['premium']
 	pircetoday = bond_daily_df.iloc[-1][price]
+	bondtoday = bond_daily_df.iloc[-1]['value']
 
 	bond_daily_low =  bond_daily_df[bond_daily_df['premium'] < floor]
 	bond_daily_high = bond_daily_df[bond_daily_df['premium'] > roof]
@@ -55,8 +56,10 @@ def calc_bond_gains(bond_daily_df,floor,roof,price):
 
 	gaindays = (bond_daily_df.iloc[-1]['date'] - bond_daily_df.iloc[0]['date']).days
 	peryear =  np.e**(np.log(total)/(gaindays/365)) - 1
-	return total,peryear,datetoday,premtoday,pircetoday
+	return total,peryear,datetoday,premtoday,pircetoday,bondtoday
 
+def calc_price_byoverflow(bondvalue,overflow):
+	return (1+overflow/100)*bondvalue
 
 def calc_bond_overflow(price,bondvalue):
 	return 100 * (price - bondvalue) / bondvalue
@@ -135,7 +138,7 @@ if __name__=='__main__':
 
 
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
-		bond_welfare_df = pd.DataFrame(columns=['code','name','totalgains','pergains','floor','roof','datetoday','premtoday','pircetoday'])
+		bond_welfare_df = pd.DataFrame(columns=['code','name','totalgains','pergains','floor','flprice','roof','rfprice','datetoday','premtoday','pircetoday'])
 		for i, bondrow in bond_interest_df.iterrows():
 			name = bondrow['name'];code = bondrow['code'];lastdate = bondrow['maturity']
 			year_return_df = calc_return_year(lastdate, bondrow['rt1'], bondrow['rt2'], bondrow['rt3'],bondrow['rt4'], bondrow['rt5'], bondrow['rt6'])
@@ -155,11 +158,15 @@ if __name__=='__main__':
 			value25 = dailysta['25%'];value50 = dailysta['50%'];value75 = dailysta['75%']
 			print("value25-value50-value75:",value25,value50,value75)
 
-			total50,peryear50,datetoday,premtoday,pircetoday = calc_bond_gains(bond_cov_daily_df,value25,value50,price)
-			bond_welfare_df = bond_welfare_df.append({'code':code,'name':name,'totalgains':total50,'pergains':peryear50,'floor':value25,'roof':value50,'datetoday':datetoday,'premtoday':premtoday,'pircetoday':pircetoday},ignore_index=True)
+			total50,peryear50,datetoday,premtoday,pircetoday,bondtoday = calc_bond_gains(bond_cov_daily_df,value25,value50,price)
+			floorprice = calc_price_byoverflow(bondtoday,value25);
+			roofprice = calc_price_byoverflow(bondtoday,value50);
+			bond_welfare_df = bond_welfare_df.append({'code':code,'name':name,'totalgains':total50,'pergains':peryear50,'floor':value25,'flprice':floorprice,'roof':value50,'rfprice':roofprice,'datetoday':datetoday,'premtoday':premtoday,'pircetoday':pircetoday},ignore_index=True)
 
-			total75,peryear75,datetoday,premtoday,pircetoday= calc_bond_gains(bond_cov_daily_df, value25, value75,price)
-			bond_welfare_df = bond_welfare_df.append({'code':code,'name':name,'totalgains':total75,'pergains': peryear75,'floor':value25,'roof':value75,'datetoday':datetoday,'premtoday':premtoday,'pircetoday':pircetoday},ignore_index=True)
+			total75,peryear75,datetoday,premtoday,pircetoday,bondtoday= calc_bond_gains(bond_cov_daily_df, value25, value75,price)
+			floorprice = calc_price_byoverflow(bondtoday,value25);
+			roofprice = calc_price_byoverflow(bondtoday,value75);
+			bond_welfare_df = bond_welfare_df.append({'code':code,'name':name,'totalgains':total75,'pergains': peryear75,'floor':value25,'flprice':floorprice,'roof':value75,'rfprice':roofprice,'datetoday':datetoday,'premtoday':premtoday,'pircetoday':pircetoday},ignore_index=True)
 			print("###############################################")
 		print(bond_welfare_df)
 		tnow = datetime.datetime.now()
