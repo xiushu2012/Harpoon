@@ -18,7 +18,7 @@ def get_akshare_jsl(xlsfile):
     shname = 'jsl'
     isExist = os.path.exists(xlsfile)
     if not isExist:
-        bond_convert_jsl_df = ak.bond_cov_jsl()
+        bond_convert_jsl_df = ak.bond_cov_jsl('kbzw__Session=hmsotphrfs3vin1iuboboik554; Hm_lvt_164fe01b1433a19b507595a43bf58262=1627631392; kbz_newcookie=1; kbzw_r_uname=weavernet; kbzw__user_login=7Obd08_P1ebax9aX7sfX19zp4d3VkZyh6dbc7OPm1Nq_1KLVr5XSltaw2qHbn67E2ZTZraPeltWSrLCnz9vN2pStkZiyoO3K1L_RpK2ZrZ-qk5ecpMy01r6bruPz3tXlzaaXpJGXn8rhz9TQ6-yVt82MqJKkkbKXyuHPppWvme2frZWXo-bR49zK3cO7yuioqpywmqqYlonCv8fFrZyB4OLgzpmz3MXh0KCXtuDT387ZqK6Zp5yllqqUp6WlqZOQtNXf1tvim6yVrY-qrQ..; Hm_lpvt_164fe01b1433a19b507595a43bf58262=1627631428')
         bond_convert_jsl_df.to_excel(xlsfile, sheet_name=shname)
 
         print("xfsfile:%s create" % (xlsfile))
@@ -110,13 +110,13 @@ if __name__=='__main__':
     bond_expect_bigboard_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^6.*?')]
 
     #bond_expect_selected_df = bond_expect_sort_df[bond_expect_sort_df['发行规模'] <= 4.0 & bond_expect_sort_df['最新价'] <= 110.0 & bond_expect_sort_df['估值距离'] <= 20.0]
-    bond_expect_selected_df = bond_expect_startup_df[(bond_expect_startup_df['发行规模'] <= 5.0)  & (bond_expect_startup_df['最新价'] <= 120.0)]
+    bond_expect_selected_df = bond_expect_startup_df[(bond_expect_startup_df['发行规模'] <= 7.0)  & (bond_expect_startup_df['最新价'] <= 120.0)]
     bond_expect_selected_df = bond_expect_selected_df.sort_values('估值距离',ascending=True)
     
-    bond_expect_candidate_df = bond_expect_smallboard_df[(bond_expect_smallboard_df['发行规模'] <= 5.0)  & (bond_expect_smallboard_df['最新价'] <= 120.0)]
+    bond_expect_candidate_df = bond_expect_smallboard_df[(bond_expect_smallboard_df['发行规模'] <= 7.0)  & (bond_expect_smallboard_df['最新价'] <= 120.0)]
     bond_expect_candidate_df = bond_expect_candidate_df.sort_values('估值距离',ascending=True)
 
-    bond_expect_alternate_df = bond_expect_bigboard_df[(bond_expect_bigboard_df['发行规模'] <= 5.0)  & (bond_expect_bigboard_df['最新价'] <= 120.0)]
+    bond_expect_alternate_df = bond_expect_bigboard_df[(bond_expect_bigboard_df['发行规模'] <= 7.0)  & (bond_expect_bigboard_df['最新价'] <= 120.0)]
     bond_expect_alternate_df = bond_expect_alternate_df.sort_values('估值距离',ascending=True)
 
     fileout = tnow.strftime('%Y_%m_%d') + '_out.xls'
