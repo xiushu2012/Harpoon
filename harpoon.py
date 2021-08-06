@@ -14,11 +14,11 @@ pd.set_option('display.max_columns',None)
 pd.set_option('display.width',1000)
 
 
-def get_akshare_jsl(xlsfile):
+def get_akshare_jsl(xlsfile,cookie):
     shname = 'jsl'
     isExist = os.path.exists(xlsfile)
     if not isExist:
-        bond_convert_jsl_df = ak.bond_cov_jsl('kbzw__Session=hmsotphrfs3vin1iuboboik554; Hm_lvt_164fe01b1433a19b507595a43bf58262=1627631392; kbz_newcookie=1; kbzw_r_uname=weavernet; kbzw__user_login=7Obd08_P1ebax9aX7sfX19zp4d3VkZyh6dbc7OPm1Nq_1KLVr5XSltaw2qHbn67E2ZTZraPeltWSrLCnz9vN2pStkZiyoO3K1L_RpK2ZrZ-qk5ecpMy01r6bruPz3tXlzaaXpJGXn8rhz9TQ6-yVt82MqJKkkbKXyuHPppWvme2frZWXo-bR49zK3cO7yuioqpywmqqYlonCv8fFrZyB4OLgzpmz3MXh0KCXtuDT387ZqK6Zp5yllqqUp6WlqZOQtNXf1tvim6yVrY-qrQ..; Hm_lpvt_164fe01b1433a19b507595a43bf58262=1627631428')
+        bond_convert_jsl_df = ak.bond_cov_jsl(cookie)
         bond_convert_jsl_df.to_excel(xlsfile, sheet_name=shname)
 
         print("xfsfile:%s create" % (xlsfile))
@@ -63,13 +63,17 @@ if __name__=='__main__':
 
     from sys import argv
     tnow = ""
-    if len(argv) > 1:
+    cookie = ""
+    if len(argv) > 2:
         if argv[1] == '*':
             tnow = datetime.datetime.now()
         else:
             tnow = datetime.datetime.strptime(argv[1], '%Y/%m/%d')
+        cookie = argv[2]
     else:
-        print("please run like 'python harpoon.py [*|2020/07/07]'")
+        print("please run like 'python harpoon.py [*|2020/07/07 cookie]'")
+        print("1.F12或者单击鼠标右键，选择审查元素")
+        print("2.点击Console,输入指令 document.cookie,回车即可显示当前页面cookie信息")
         exit(1)
 
     print("time is :" + tnow.strftime('%Y%m%d'))
@@ -85,7 +89,7 @@ if __name__=='__main__':
     else:
         print("AkShareFile:%s exist" % (filefolder))
 
-    resultpath,insheetname = get_akshare_jsl(getakpath)
+    resultpath,insheetname = get_akshare_jsl(getakpath,cookie)
     print("data of path:" + resultpath + "sheetname:" +insheetname)
 
 
