@@ -90,7 +90,7 @@ if __name__=='__main__':
 		bond_kelly_df = pd.DataFrame(columns=['可转债','胜率','赔率1','下注比例1','赔率2','下注比例2','当前价格','最小','25分位','50分位','75分位'])
 		money = 'money'
 		for bond in bondarray:
-			dailypath =  "./bond/%s.xls" % (bond)
+			dailypath =  "./bond/%s.xlsx" % (bond)
 			resultpath,insheetname = get_akshare_daily(dailypath,bond)
 			print("data of path:" + resultpath + ",sheetname:" +insheetname)
 
@@ -126,7 +126,7 @@ if __name__=='__main__':
 			print("可转债,胜率，赔率1,下注比例1,赔率2,下注比例2:",bond,kellyp,kellyb1,kellyf1,kellyb2,kellyf2)
 		#print(bond_kelly_df)
 		tnow = datetime.datetime.now()
-		fileout = tnow.strftime('%Y_%m_%d') + '_kelly.xls'
+		fileout = tnow.strftime('%Y_%m_%d') + '_kelly.xlsx'
 		outanalypath = "%s/%s" % ('bond', fileout)
 		writer = pd.ExcelWriter(outanalypath)
 		bond_kelly_df.to_excel(writer, 'kelly')

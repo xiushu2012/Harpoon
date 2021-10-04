@@ -122,10 +122,10 @@ def calc_return_year(lastdate,rt1,rt2,rt3,rt4,rt5,rt6):
 
 
 if __name__=='__main__':
-		interestpath = "./interest.xls"
+		interestpath = "./interest.xlsx"
 		isExist = os.path.exists(interestpath)
 		if not isExist:
-			print("please make sure the ./interest.xls")
+			print("please make sure the ./interest.xlsx")
 			exit(1)
 
 		price = ''
@@ -143,7 +143,7 @@ if __name__=='__main__':
 			name = bondrow['name'];code = bondrow['code'];lastdate = bondrow['maturity']
 			year_return_df = calc_return_year(lastdate, bondrow['rt1'], bondrow['rt2'], bondrow['rt3'],bondrow['rt4'], bondrow['rt5'], bondrow['rt6'])
 
-			dailypath =  "./bond/%s.xls" % (code)
+			dailypath =  "./bond/%s.xlsx" % (code)
 			resultpath,insheetname = get_akshare_daily(dailypath,code)
 
 			print("data of path:" + resultpath + ",sheetname:" +insheetname)
@@ -170,7 +170,7 @@ if __name__=='__main__':
 			print("###############################################")
 		print(bond_welfare_df)
 		tnow = datetime.datetime.now()
-		fileout = tnow.strftime('%Y_%m_%d') +'_' + price +'_welfare.xls'
+		fileout = tnow.strftime('%Y_%m_%d') +'_' + price +'_welfare.xlsx'
 		outanalypath = "%s/%s" % ('bond', fileout)
 		writer = pd.ExcelWriter(outanalypath)
 		bond_welfare_df.to_excel(writer, 'welfare')
