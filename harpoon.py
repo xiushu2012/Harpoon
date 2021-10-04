@@ -79,7 +79,7 @@ if __name__=='__main__':
     print("time is :" + tnow.strftime('%Y%m%d'))
 
     filefolder = r'./data/' + tnow.strftime('%Y%m%d')
-    filein = tnow.strftime('%Y_%m_%d') + '_in.xls'
+    filein = tnow.strftime('%Y_%m_%d') + '_in.xlsx'
     getakpath =  "%s/%s" % (filefolder,filein)
 
     isExist = os.path.exists(filefolder)
@@ -114,16 +114,16 @@ if __name__=='__main__':
     bond_expect_bigboard_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^6.*?')]
 
     #bond_expect_selected_df = bond_expect_sort_df[bond_expect_sort_df['发行规模'] <= 4.0 & bond_expect_sort_df['最新价'] <= 110.0 & bond_expect_sort_df['估值距离'] <= 20.0]
-    bond_expect_selected_df = bond_expect_startup_df[(bond_expect_startup_df['发行规模'] <= 7.0)  & (bond_expect_startup_df['最新价'] <= 120.0)]
+    bond_expect_selected_df = bond_expect_startup_df[(bond_expect_startup_df['发行规模'] <= 10.0)  & (bond_expect_startup_df['最新价'] <= 120.0) & (bond_expect_startup_df['纯债溢价率'] <= 11.0)]
     bond_expect_selected_df = bond_expect_selected_df.sort_values('估值距离',ascending=True)
     
-    bond_expect_candidate_df = bond_expect_smallboard_df[(bond_expect_smallboard_df['发行规模'] <= 7.0)  & (bond_expect_smallboard_df['最新价'] <= 120.0)]
+    bond_expect_candidate_df = bond_expect_smallboard_df[(bond_expect_smallboard_df['发行规模'] <= 10.0)  & (bond_expect_smallboard_df['最新价'] <= 120.0)  & (bond_expect_smallboard_df['纯债溢价率'] <= 11.0) ]
     bond_expect_candidate_df = bond_expect_candidate_df.sort_values('估值距离',ascending=True)
 
-    bond_expect_alternate_df = bond_expect_bigboard_df[(bond_expect_bigboard_df['发行规模'] <= 7.0)  & (bond_expect_bigboard_df['最新价'] <= 120.0)]
+    bond_expect_alternate_df = bond_expect_bigboard_df[(bond_expect_bigboard_df['发行规模'] <= 10.0)  & (bond_expect_bigboard_df['最新价'] <= 120.0) & (bond_expect_bigboard_df['纯债溢价率'] <= 11.0) ]
     bond_expect_alternate_df = bond_expect_alternate_df.sort_values('估值距离',ascending=True)
 
-    fileout = tnow.strftime('%Y_%m_%d') + '_out.xls'
+    fileout = tnow.strftime('%Y_%m_%d') + '_out.xlsx'
     outanalypath =  "%s/%s" % (filefolder,fileout)
     writer = pd.ExcelWriter(outanalypath)
     bond_expect_sort_df.to_excel(writer,'analyze')
