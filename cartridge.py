@@ -61,6 +61,14 @@ def getkellybEx(value,v0,v100):
 	return kellyb
 
 
+def get_dailyinc_df(path,name,ratio):
+	bond_cov_dailyinc_df = pd.read_excel(path, name)[['date', 'open','high']]
+	bond_cov_dailyinc_df[ratio] = bond_cov_dailyinc_df.apply(lambda row: (row['high']-row['open'])/row['open'], axis=1)
+	bond_cov_biginc_df = bond_cov_dailyinc_df[ bond_cov_dailyinc_df[ratio] > 0.03]
+	return bond_cov_biginc_df
+
+
+
 def get_daily_df(path,name,price):
 	newcolumn = price
 	bond_cov_daily_df_open = pd.read_excel(path, name)[['date', 'open']]
@@ -97,8 +105,9 @@ if __name__=='__main__':
 
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
 
-		bond_kelly_df = pd.DataFrame(columns=['名称','代码', '胜率', '赔率', '下注比例', '当前价格', '00分位', '25分位', '50分位', '75分位','100分位'])
+		bond_kelly_df = pd.DataFrame(columns=['名称','代码', '胜率', '赔率', '下注比例', '当前价格', '00分位', '25分位', '50分位', '75分位','100分位','75涨幅'])
 		money = 'money'
+		ratio = 'ratio'
 		for i, bondrow in bond_interest_df.iterrows():
 			name = bondrow['name'];bond = bondrow['code'];
 
@@ -112,7 +121,12 @@ if __name__=='__main__':
 			bond_cov_daily_df = get_daily_df(resultpath, insheetname, money)
 			dailysta = bond_cov_daily_df[money].describe()
 
+			bond_cov_biginc_df = get_dailyinc_df(resultpath, insheetname,ratio)
+			incsta = bond_cov_biginc_df[ratio].describe()
+
 			print(dailysta)
+			print(incsta)
+
 			counts = dailysta['count']
 			date = bond_cov_daily_df.loc[counts-1][0]
 			value = bond_cov_daily_df.loc[counts-1][1]
@@ -123,6 +137,7 @@ if __name__=='__main__':
 			value50 = dailysta['50%']
 			value75 = dailysta['75%']
 
+			inc75 = incsta['75%']
 			# 赔率=获胜时的盈利/失败时的亏损
 			kellyb1= getkellybEx(value,valuemin,valuemax)
 
@@ -134,7 +149,7 @@ if __name__=='__main__':
 			#下注比例
 			kellyf1 = ((kellyb1+1)*kellyp-1)/kellyb1
 
-			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,'当前价格':value,'00分位':valuemin,'25分位':value25,'50分位':value50,'75分位':value75,'100分位':valuemax},ignore_index=True)
+			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,'当前价格':value,'00分位':valuemin,'25分位':value25,'50分位':value50,'75分位':value75,'100分位':valuemax,'75涨幅':inc75},ignore_index=True)
 
 			print("名称,胜率，赔率,下注比例:",name,kellyp,kellyb1,kellyf1)
 		#print(bond_kelly_df)
