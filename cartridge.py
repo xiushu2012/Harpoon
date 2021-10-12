@@ -105,7 +105,7 @@ if __name__=='__main__':
 
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
 
-		bond_kelly_df = pd.DataFrame(columns=['名称','代码', '胜率', '赔率', '下注比例', '当前价格', '00分位', '25分位', '50分位', '75分位','100分位','75涨幅'])
+		bond_kelly_df = pd.DataFrame(columns=['名称','代码', '胜率', '赔率', '下注比例', '当前价格', '00分位', '25分位', '50分位', '75分位','100分位','75涨幅','回落参考','绝对参考'])
 		money = 'money'
 		ratio = 'ratio'
 		for i, bondrow in bond_interest_df.iterrows():
@@ -149,7 +149,13 @@ if __name__=='__main__':
 			#下注比例
 			kellyf1 = ((kellyb1+1)*kellyp-1)/kellyb1
 
-			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,'当前价格':value,'00分位':valuemin,'25分位':value25,'50分位':value50,'75分位':value75,'100分位':valuemax,'75涨幅':inc75},ignore_index=True)
+
+			#回落卖出参考=当前价格*（1+75涨幅）
+			returnsell = value *(1+inc75)
+			#绝对卖出参考=75分位价格
+			absolutesell = value75
+
+			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,'当前价格':value,'00分位':valuemin,'25分位':value25,'50分位':value50,'75分位':value75,'100分位':valuemax,'75涨幅':inc75,'回落参考':returnsell,'绝对参考':absolutesell},ignore_index=True)
 
 			print("名称,胜率，赔率,下注比例:",name,kellyp,kellyb1,kellyf1)
 		#print(bond_kelly_df)
