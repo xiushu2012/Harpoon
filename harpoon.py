@@ -97,8 +97,8 @@ if __name__=='__main__':
     print("the average of unlisted bond 转股溢价率,纯债溢价率",va,vb)
 
 
-    bond_cov_jsl_df = pd.read_excel(resultpath, insheetname,converters={'stock_cd':str})[['bond_nm', 'stock_cd','orig_iss_amt','rating_cd','guarantor','price','year_left','ytm_rt','convert_value','premium_rt','force_redeem','convert_cd_tip','adj_cnt','adj_scnt','pre_bond_id']]
-    bond_cov_jsl_df.rename(columns={'bond_nm': '转债名称', 'stock_cd': '正股代码','orig_iss_amt':'发行规模','rating_cd':'评级','guarantor':'担保情况','price':'最新价','year_left':'剩余期限','ytm_rt':'到期年化','convert_value':'转股价值','premium_rt':'转股溢价率','force_redeem':'强赎公告','convert_cd_tip':'转股提示','adj_cnt':'下修次数','adj_scnt':'成功次数','pre_bond_id':'转债代码'}, inplace=True)
+    bond_cov_jsl_df = pd.read_excel(resultpath, insheetname,converters={'stock_cd':str})[['bond_nm', 'stock_cd','curr_iss_amt','rating_cd','guarantor','price','year_left','ytm_rt','convert_value','premium_rt','force_redeem','convert_cd_tip','adj_cnt','adj_scnt','pre_bond_id']]
+    bond_cov_jsl_df.rename(columns={'bond_nm': '转债名称', 'stock_cd': '正股代码','curr_iss_amt':'剩余规模','rating_cd':'评级','guarantor':'担保情况','price':'最新价','year_left':'剩余期限','ytm_rt':'到期年化','convert_value':'转股价值','premium_rt':'转股溢价率','force_redeem':'强赎公告','convert_cd_tip':'转股提示','adj_cnt':'下修次数','adj_scnt':'成功次数','pre_bond_id':'转债代码'}, inplace=True)
 
     bond_cov_jsl_df['纯债价值'] = bond_cov_jsl_df.apply(lambda row: calc_bond_value(row['最新价'],row['到期年化'],row['剩余期限']), axis=1)
     bond_cov_jsl_df['纯债溢价率'] = bond_cov_jsl_df.apply(lambda row: calc_bond_overflow(row['最新价'],row['纯债价值']), axis=1)
@@ -106,21 +106,21 @@ if __name__=='__main__':
 
     bond_cov_jsl_df['估值距离'] = bond_cov_jsl_df.apply(lambda row: calc_value_distance(row['转股溢价率'], row['纯债溢价率'],va,vb), axis=1)
     #bond_expect_sort_df = bond_cov_jsl_df.sort_values('估值距离',ascending=True)
-    bond_expect_sort_df = bond_cov_jsl_df.sort_values('发行规模', ascending=True)
-    bond_expect_sort_df = bond_expect_sort_df[['转债代码','转债名称','正股代码','到期年化','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','最新价','发行规模','评级','担保情况','剩余期限','转股提示','下修次数','成功次数','强赎公告']]
+    bond_expect_sort_df = bond_cov_jsl_df.sort_values('剩余规模', ascending=True)
+    bond_expect_sort_df = bond_expect_sort_df[['转债代码','转债名称','正股代码','到期年化','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','最新价','剩余规模','评级','担保情况','剩余期限','转股提示','下修次数','成功次数','强赎公告']]
 
     bond_expect_startup_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^3.*?')]
     bond_expect_smallboard_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^0.*?')]
     bond_expect_bigboard_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^6.*?')]
 
-    #bond_expect_selected_df = bond_expect_sort_df[bond_expect_sort_df['发行规模'] <= 4.0 & bond_expect_sort_df['最新价'] <= 110.0 & bond_expect_sort_df['估值距离'] <= 20.0]
-    bond_expect_selected_df = bond_expect_startup_df[(bond_expect_startup_df['发行规模'] <= 10.0)  & (bond_expect_startup_df['最新价'] <= 120.0) & (bond_expect_startup_df['纯债溢价率'] <= 11.0)]
+    #bond_expect_selected_df = bond_expect_sort_df[bond_expect_sort_df['剩余规模'] <= 4.0 & bond_expect_sort_df['最新价'] <= 110.0 & bond_expect_sort_df['估值距离'] <= 20.0]
+    bond_expect_selected_df = bond_expect_startup_df[(bond_expect_startup_df['剩余规模'] <= 10.0)  & (bond_expect_startup_df['最新价'] <= 120.0) & (bond_expect_startup_df['纯债溢价率'] <= 11.0)]
     bond_expect_selected_df = bond_expect_selected_df.sort_values('估值距离',ascending=True)
     
-    bond_expect_candidate_df = bond_expect_smallboard_df[(bond_expect_smallboard_df['发行规模'] <= 10.0)  & (bond_expect_smallboard_df['最新价'] <= 120.0)  & (bond_expect_smallboard_df['纯债溢价率'] <= 11.0) ]
+    bond_expect_candidate_df = bond_expect_smallboard_df[(bond_expect_smallboard_df['剩余规模'] <= 10.0)  & (bond_expect_smallboard_df['最新价'] <= 120.0)  & (bond_expect_smallboard_df['纯债溢价率'] <= 11.0) ]
     bond_expect_candidate_df = bond_expect_candidate_df.sort_values('估值距离',ascending=True)
 
-    bond_expect_alternate_df = bond_expect_bigboard_df[(bond_expect_bigboard_df['发行规模'] <= 10.0)  & (bond_expect_bigboard_df['最新价'] <= 120.0) & (bond_expect_bigboard_df['纯债溢价率'] <= 11.0) ]
+    bond_expect_alternate_df = bond_expect_bigboard_df[(bond_expect_bigboard_df['剩余规模'] <= 10.0)  & (bond_expect_bigboard_df['最新价'] <= 120.0) & (bond_expect_bigboard_df['纯债溢价率'] <= 11.0) ]
     bond_expect_alternate_df = bond_expect_alternate_df.sort_values('估值距离',ascending=True)
 
     fileout = tnow.strftime('%Y_%m_%d') + '_out.xlsx'
