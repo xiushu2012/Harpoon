@@ -42,7 +42,11 @@ def calc_bond_value(price,ratio,year):
     else:
         ratio = float(ratio.strip('%'))/100
         govload = 0.04
-        return price*(1+ratio)**year/(1+govload)**year
+        
+        if ratio <= -1:
+        	return 100
+        else:
+        	return price*(1+ratio)**year/(1+govload)**year
 
 def calc_bond_overflow(price,bondvalue):
     return 100 * (price - bondvalue) / bondvalue
