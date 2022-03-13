@@ -48,6 +48,13 @@ def calc_bond_value(price,ratio,year):
         else:
         	return price*(1+ratio)**year/(1+govload)**year
 
+def calc_interest_value(price,ratio,year):
+    if ratio == '-':
+        return 130
+    else:
+        ratio = float(ratio.strip('%'))/100
+        return price*(1+ratio)**year
+
 def calc_bond_overflow(price,bondvalue):
     return 100 * (price - bondvalue) / bondvalue
 
@@ -107,11 +114,15 @@ if __name__=='__main__':
     bond_cov_jsl_df['纯债价值'] = bond_cov_jsl_df.apply(lambda row: calc_bond_value(row['最新价'],row['到期年化'],row['剩余期限']), axis=1)
     bond_cov_jsl_df['纯债溢价率'] = bond_cov_jsl_df.apply(lambda row: calc_bond_overflow(row['最新价'],row['纯债价值']), axis=1)
     bond_cov_jsl_df['转股溢价率'] = bond_cov_jsl_df.apply(lambda row: calc_stock_overflow(row['转股溢价率']), axis=1)
+    bond_cov_jsl_df['含息价'] = bond_cov_jsl_df.apply(lambda row: calc_interest_value(row['最新价'],row['到期年化'],row['剩余期限']), axis=1)
 
     bond_cov_jsl_df['估值距离'] = bond_cov_jsl_df.apply(lambda row: calc_value_distance(row['转股溢价率'], row['纯债溢价率'],va,vb), axis=1)
+    
+    
+    
     #bond_expect_sort_df = bond_cov_jsl_df.sort_values('估值距离',ascending=True)
     bond_expect_sort_df = bond_cov_jsl_df.sort_values('剩余规模', ascending=True)
-    bond_expect_sort_df = bond_expect_sort_df[['转债代码','转债名称','正股代码','到期年化','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','最新价','剩余规模','评级','担保情况','剩余期限','转股提示','下修次数','成功次数','强赎公告']]
+    bond_expect_sort_df = bond_expect_sort_df[['转债代码','转债名称','正股代码','到期年化','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','最新价','含息价','剩余规模','评级','担保情况','剩余期限','转股提示','下修次数','成功次数','强赎公告']]
 
     bond_expect_startup_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^3.*?')]
     bond_expect_smallboard_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'^0.*?')]
