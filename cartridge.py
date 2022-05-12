@@ -103,7 +103,7 @@ def get_abnormal_dbscan_df(path,name):
 		abnormal_next_df = bond_cov_volume_df.loc[cur:nxt,:][['open','high','low','close']]
 		#cur当天数据不能纳入计算
 		abnormal_next_array = abnormal_next_df.values[1::,:]
-		print(abnormal_next_array)
+		#print(abnormal_next_array)
 		abnormal_cur_close =  abnormal_next_df.loc[cur,'close']
 
 		bond_cov_abnormal_df.loc[cur,'max'] = 100*(np.max(abnormal_next_array)-abnormal_cur_close)/abnormal_cur_close
