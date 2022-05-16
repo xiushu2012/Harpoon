@@ -76,6 +76,14 @@ def select_interest_some(writer,bond_expect_df,tag):
     bond_expect_selected_df = bond_expect_selected_df.sort_values('估值距离', ascending=True)
     bond_expect_selected_df.to_excel(writer, optimaltag)
 
+def select_bank_some(writer,bond_expect_df,tag):
+    bond_expect_df = bond_expect_df.sort_values('最新价', ascending=True)
+    bond_expect_df.to_excel(writer, tag)
+    #optimaltag = 'opt-'+ tag;
+    #bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 10.0) & (bond_expect_df['最新价'] <= 120.0) & (bond_expect_df['纯债溢价率'] <= 11.0)]
+    #bond_expect_selected_df = bond_expect_selected_df.sort_values('估值距离', ascending=True)
+    #bond_expect_selected_df.to_excel(writer, optimaltag)
+
 
 
 
@@ -137,16 +145,19 @@ if __name__=='__main__':
     bond_expect_middlesmall_df = bond_expect_sort_df[bond_expect_sort_df['转债代码'].str.contains(r'^(127|128).*?')]
     bond_expect_bigboard_df = bond_expect_sort_df[bond_expect_sort_df['转债代码'].str.contains(r'^(110|113).*?')]
     bond_expect_scitech_df = bond_expect_sort_df[bond_expect_sort_df['转债代码'].str.contains(r'^118.*?')]
+    bond_expect_bank_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'.*银行.*?')]
 
     fileout = tnow.strftime('%Y_%m_%d') + '_out.xlsx'
     outanalypath =  "%s/%s" % (filefolder,fileout)
     writer = pd.ExcelWriter(outanalypath)
     bond_expect_sort_df.to_excel(writer,'analyze')
 
+    select_bank_some(writer, bond_expect_bank_df, 'bank')
     select_interest_some(writer, bond_expect_startup_df, 'startup')
     select_interest_some(writer, bond_expect_middlesmall_df, 'middlesmall')
     select_interest_some(writer, bond_expect_bigboard_df, 'bigboard')
     select_interest_some(writer, bond_expect_scitech_df, 'scitech')
+
 
     writer.save()
     print("value distance of  'unlist and analye' :" + fileout)
