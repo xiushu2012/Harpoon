@@ -79,8 +79,8 @@ if __name__=='__main__':
 				print("creeepjsl:%s exist" % (filefolder))
 				
 			jsl_df.replace('-','0',inplace=True)
-			jsl_df=jsl_df[['转债名称', '正股名称','剩余规模(亿元)','债券评级','现 价','剩余年限','到期税前收益','转股价值','溢价率','代 码']]
-			jsl_df.rename(columns={'转债名称': 'bond_nm', '正股名称': 'stock_cd','剩余规模(亿元)':'curr_iss_amt','债券评级':'rating_cd','现 价':'price','剩余年限':'year_left','到期税前收益':'ytm_rt','转股价值':'convert_value','溢价率':'premium_rt','代 码':'pre_bond_id'}, inplace=True)
+			jsl_df=jsl_df[['转债名称', '正股名称','剩余规模(亿元)','债券评级','现 价','剩余年限','到期税前收益','转股价值','转股溢价率','代 码']]
+			jsl_df.rename(columns={'转债名称': 'bond_nm', '正股名称': 'stock_cd','剩余规模(亿元)':'curr_iss_amt','债券评级':'rating_cd','现 价':'price','剩余年限':'year_left','到期税前收益':'ytm_rt','转股价值':'convert_value','转股溢价率':'premium_rt','代 码':'pre_bond_id'}, inplace=True)
 			jsl_df = jsl_df.append({'force_redeem':'','adj_scnt':'','adj_cnt':'','guarantor':'','convert_cd_tip':''},ignore_index=True)
 
 			
