@@ -20,7 +20,7 @@ def get_akshare_jsl(xlsfile,cookie):
     shname = 'jsl'
     isExist = os.path.exists(xlsfile)
     if not isExist:
-        bond_convert_jsl_df = ak.bond_cov_jsl(cookie)
+        bond_convert_jsl_df = ak.bond_cb_jsl(cookie)
         bond_convert_jsl_df.to_excel(xlsfile, sheet_name=shname)
 
         print("xfsfile:%s create" % (xlsfile))
@@ -39,10 +39,11 @@ def calc_value_distance(a, b,va,vb):
 	return math.sqrt((a-va)**2+(b-vb)**2)
 
 def calc_bond_value(price,ratio,year):
-    if ratio == '-':
+    if ratio == '':
         return 130
     else:
-        ratio = float(ratio.strip('%'))/100
+        #ratio = float(ratio.strip('%'))/100
+        ratio = float(ratio)/100
         govload = 0.04
         
         if ratio <= -1:
@@ -51,18 +52,19 @@ def calc_bond_value(price,ratio,year):
         	return price*(1+ratio)**year/(1+govload)**year
 
 def calc_interest_value(price,ratio,year):
-    if ratio == '-':
+    if ratio == '':
         return 130
     else:
-        ratio = float(ratio.strip('%'))/100
+        #ratio = float(ratio.strip('%'))/100
+        ratio = float(ratio)/100
         return price*(1+ratio)**year
 
 def calc_bond_overflow(price,bondvalue):
     return 100 * (price - bondvalue) / bondvalue
 
 def calc_stock_overflow(overflow):
-    return float(overflow.strip('%'))
-
+    #return float(overflow.strip('%'))
+    return float(overflow)
 
 def get_pass_days(date):
 	if date == '-':
@@ -74,12 +76,12 @@ def get_pass_days(date):
 def select_interest_some(writer,bond_expect_df,tag):
     bond_expect_df.to_excel(writer, tag)
     optimaltag = 'opt-'+ tag;
-    bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 10.0) & (bond_expect_df['最新价'] <= 120.0) & (bond_expect_df['纯债溢价率'] <= 11.0)]
+    bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 10.0) & (bond_expect_df['现价'] <= 120.0) & (bond_expect_df['纯债溢价率'] <= 11.0)]
     bond_expect_selected_df = bond_expect_selected_df.sort_values('估值距离', ascending=True)
     bond_expect_selected_df.to_excel(writer, optimaltag)
 
 def select_bank_some(writer,bond_expect_df,tag):
-    bond_expect_df = bond_expect_df.sort_values('最新价', ascending=True)
+    bond_expect_df = bond_expect_df.sort_values('现价', ascending=True)
     bond_expect_df.to_excel(writer, tag)
     #optimaltag = 'opt-'+ tag;
     #bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 10.0) & (bond_expect_df['最新价'] <= 120.0) & (bond_expect_df['纯债溢价率'] <= 11.0)]
@@ -127,13 +129,15 @@ if __name__=='__main__':
     print("the average of unlisted bond 转股溢价率,纯债溢价率",va,vb)
 
 
-    bond_cov_jsl_df = pd.read_excel(resultpath, insheetname,converters={'pre_bond_id':str})[['bond_nm', 'stock_cd','curr_iss_amt','rating_cd','guarantor','price','year_left','ytm_rt','convert_value','premium_rt','force_redeem','convert_cd_tip','adj_cnt','adj_scnt','pre_bond_id']]
-    bond_cov_jsl_df.rename(columns={'bond_nm': '转债名称', 'stock_cd': '正股代码','curr_iss_amt':'剩余规模','rating_cd':'评级','guarantor':'担保情况','price':'最新价','year_left':'剩余期限','ytm_rt':'到期年化','convert_value':'转股价值','premium_rt':'转股溢价率','force_redeem':'强赎公告','convert_cd_tip':'转股提示','adj_cnt':'下修次数','adj_scnt':'成功次数','pre_bond_id':'转债代码'}, inplace=True)
+    #bond_cov_jsl_df = pd.read_excel(resultpath, insheetname,converters={'pre_bond_id':str})[['bond_nm', 'stock_cd','curr_iss_amt','rating_cd','guarantor','price','year_left','ytm_rt','convert_value','premium_rt','force_redeem','convert_cd_tip','adj_cnt','adj_scnt','pre_bond_id']]
+    #bond_cov_jsl_df.rename(columns={'bond_nm': '转债名称', 'stock_cd': '正股代码','curr_iss_amt':'剩余规模','rating_cd':'评级','guarantor':'担保情况','price':'最新价','year_left':'剩余期限','ytm_rt':'到期年化','convert_value':'转股价值','premium_rt':'转股溢价率','force_redeem':'强赎公告','convert_cd_tip':'转股提示','adj_cnt':'下修次数','adj_scnt':'成功次数','pre_bond_id':'转债代码'}, inplace=True)
+    bond_cov_jsl_df = pd.read_excel(resultpath, insheetname,converters={'代码':str})[['转债名称', '正股名称','剩余规模','评级','现价','剩余年限','到期税前收益','转股价值','转股溢价率','代码']]
 
-    bond_cov_jsl_df['纯债价值'] = bond_cov_jsl_df.apply(lambda row: calc_bond_value(row['最新价'],row['到期年化'],row['剩余期限']), axis=1)
-    bond_cov_jsl_df['纯债溢价率'] = bond_cov_jsl_df.apply(lambda row: calc_bond_overflow(row['最新价'],row['纯债价值']), axis=1)
+
+    bond_cov_jsl_df['纯债价值'] = bond_cov_jsl_df.apply(lambda row: calc_bond_value(row['现价'],row['到期税前收益'],row['剩余年限']), axis=1)
+    bond_cov_jsl_df['纯债溢价率'] = bond_cov_jsl_df.apply(lambda row: calc_bond_overflow(row['现价'],row['纯债价值']), axis=1)
     bond_cov_jsl_df['转股溢价率'] = bond_cov_jsl_df.apply(lambda row: calc_stock_overflow(row['转股溢价率']), axis=1)
-    bond_cov_jsl_df['含息价'] = bond_cov_jsl_df.apply(lambda row: calc_interest_value(row['最新价'],row['到期年化'],row['剩余期限']), axis=1)
+    bond_cov_jsl_df['含息价'] = bond_cov_jsl_df.apply(lambda row: calc_interest_value(row['现价'],row['到期税前收益'],row['剩余年限']), axis=1)
 
     bond_cov_jsl_df['估值距离'] = bond_cov_jsl_df.apply(lambda row: calc_value_distance(row['转股溢价率'], row['纯债溢价率'],va,vb), axis=1)
     
@@ -141,13 +145,13 @@ if __name__=='__main__':
     
     #bond_expect_sort_df = bond_cov_jsl_df.sort_values('估值距离',ascending=True)
     bond_expect_sort_df = bond_cov_jsl_df.sort_values('剩余规模', ascending=True)
-    bond_expect_sort_df = bond_expect_sort_df[['转债代码','转债名称','正股代码','到期年化','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','最新价','含息价','剩余规模','评级','担保情况','剩余期限','转股提示','下修次数','成功次数','强赎公告']]
+    bond_expect_sort_df = bond_expect_sort_df[['代码','转债名称','正股名称','到期税前收益','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','现价','含息价','剩余规模','评级','剩余年限']]
 
-    bond_expect_startup_df = bond_expect_sort_df[bond_expect_sort_df['转债代码'].str.contains(r'^123.*?')]
-    bond_expect_middlesmall_df = bond_expect_sort_df[bond_expect_sort_df['转债代码'].str.contains(r'^(127|128).*?')]
-    bond_expect_bigboard_df = bond_expect_sort_df[bond_expect_sort_df['转债代码'].str.contains(r'^(110|113).*?')]
-    bond_expect_scitech_df = bond_expect_sort_df[bond_expect_sort_df['转债代码'].str.contains(r'^118.*?')]
-    bond_expect_bank_df = bond_expect_sort_df[bond_expect_sort_df['正股代码'].str.contains(r'.*银行.*?')]
+    bond_expect_startup_df = bond_expect_sort_df[bond_expect_sort_df['代码'].str.contains(r'^123.*?')]
+    bond_expect_middlesmall_df = bond_expect_sort_df[bond_expect_sort_df['代码'].str.contains(r'^(127|128).*?')]
+    bond_expect_bigboard_df = bond_expect_sort_df[bond_expect_sort_df['代码'].str.contains(r'^(110|113).*?')]
+    bond_expect_scitech_df = bond_expect_sort_df[bond_expect_sort_df['代码'].str.contains(r'^118.*?')]
+    bond_expect_bank_df = bond_expect_sort_df[bond_expect_sort_df['正股名称'].str.contains(r'.*银行.*?')]
 
     fileout = tnow.strftime('%Y_%m_%d') + '_out.xlsx'
     outanalypath =  "%s/%s" % (filefolder,fileout)

@@ -50,10 +50,13 @@ def get_cookie(driver,url):
 		f.write(jsonCookies)
 	print("please check cookie in cookies.json")
 
+def convert_float(rt1,rt2):
+		ratio1 = float(rt1.strip('%'))
+		ratio2 = float(rt2.strip('%'))
+		return ratio1,ratio2
 
 
 if __name__=='__main__':
-
 			url = 'https://www.jisilu.cn/data/cbnew/#cb'
 			browser = get_browser(url)
 						
@@ -80,8 +83,9 @@ if __name__=='__main__':
 				
 			jsl_df.replace('-','0',inplace=True)
 			jsl_df=jsl_df[['转债名称', '正股名称','剩余规模(亿元)','债券评级','现 价','剩余年限','到期税前收益','转股价值','转股溢价率','代 码']]
-			jsl_df.rename(columns={'转债名称': 'bond_nm', '正股名称': 'stock_cd','剩余规模(亿元)':'curr_iss_amt','债券评级':'rating_cd','现 价':'price','剩余年限':'year_left','到期税前收益':'ytm_rt','转股价值':'convert_value','转股溢价率':'premium_rt','代 码':'pre_bond_id'}, inplace=True)
-			jsl_df = jsl_df.append({'force_redeem':'','adj_scnt':'','adj_cnt':'','guarantor':'','convert_cd_tip':''},ignore_index=True)
+			jsl_df[['到期税前收益','转股溢价率']]=jsl_df[['到期税前收益','转股溢价率']].apply(lambda row: convert_float(row['到期税前收益'],row['转股溢价率']), axis=1,result_type="expand")
+			jsl_df.rename(columns={'转债名称': '转债名称', '正股名称': '正股名称','剩余规模(亿元)':'剩余规模','债券评级':'评级','现 价':'现价','剩余年限':'剩余年限','到期税前收益':'到期税前收益','转股价值':'转股价值','转股溢价率':'转股溢价率','代 码':'代码'}, inplace=True)
+			#jsl_df = jsl_df.append({'force_redeem':'','adj_scnt':'','adj_cnt':'','guarantor':'','convert_cd_tip':''},ignore_index=True)
 
 			
 			jsl_df.to_excel(getakpath,index=False,sheet_name='jsl')
