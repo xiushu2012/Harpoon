@@ -177,7 +177,7 @@ if __name__=='__main__':
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
 
 
-		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例', '当前价格', '00分位', '25分位', '50分位', '75分位', '100分位', '75涨幅','年均异动','最后异动'])
+		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例', '当前价格', '00分位', '25分位', '50分位', '75分位', '100分位', '75涨幅','年均异动','最后异动','异动阈值'])
 		money = 'money'
 		ratio = 'ratio'
 		for i, bondrow in bond_interest_df.iterrows():
@@ -228,9 +228,11 @@ if __name__=='__main__':
 			#250个交易日
 			abnormalperyear = abnormalcount/(counts/250)
 			abnormallatest = bond_cov_abnormal_df.iloc[-1][0]
+			abnormalminvol = np.min(bond_cov_abnormal_df['volume'])
+			#print("--->"+str(abnormalminvol))
 			
 
-			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,'当前价格':value,'00分位':valuemin,'25分位':value25,'50分位':value50,'75分位':value75,'100分位':valuemax,'75涨幅':inc75,'年均异动':abnormalperyear,'最后异动':abnormallatest},ignore_index=True)
+			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,'当前价格':value,'00分位':valuemin,'25分位':value25,'50分位':value50,'75分位':value75,'100分位':valuemax,'75涨幅':inc75,'年均异动':abnormalperyear,'最后异动':abnormallatest,'异动阈值':abnormalminvol},ignore_index=True)
 
 			print("名称,胜率，赔率,下注比例:",name,kellyp,kellyb1,kellyf1)
 		#print(bond_kelly_df)
