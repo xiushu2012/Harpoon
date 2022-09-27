@@ -166,6 +166,14 @@ def get_daily_df(path,name,price):
 	return bond_cov_daily_df
 
 
+def select_interest_some(writer,bond_expect_df,tag):
+		bond_expect_df = bond_expect_df.sort_values('下注比例', ascending=False)
+		bond_expect_df.to_excel(writer, tag)
+		optimaltag = 'opt-'+ tag;
+		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 2.0) & (bond_expect_df['下注比例'] >= 0.3)]
+		bond_expect_selected_df = bond_expect_selected_df.sort_values('年均异动', ascending=False)
+		bond_expect_selected_df.to_excel(writer, optimaltag)
+
 if __name__=='__main__':
 
 		interestpath = "./interest.xlsx"
@@ -240,7 +248,8 @@ if __name__=='__main__':
 		fileout = tnow.strftime('%Y_%m_%d') + '_kelly.xlsx'
 		outanalypath = "%s/%s" % ('bond', fileout)
 		writer = pd.ExcelWriter(outanalypath)
-		bond_kelly_df.to_excel(writer, 'kelly')
+		#bond_kelly_df.to_excel(writer, 'kelly')
+		select_interest_some(writer, bond_kelly_df, 'kelly')
 		writer.save()
 		print("kelly analy out path:" + outanalypath)
 
