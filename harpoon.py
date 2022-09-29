@@ -76,16 +76,16 @@ def get_pass_days(date):
 def select_interest_some(writer,bond_expect_df,tag):
     bond_expect_df.to_excel(writer, tag)
     optimaltag = 'opt-'+ tag;
-    bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 7.0) & (bond_expect_df['现价'] <= 120.0) & (bond_expect_df['到期税前收益'] > 0.0)]
-    bond_expect_selected_df = bond_expect_selected_df.sort_values('纯债溢价率', ascending=True)
+    bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 7.0) & (bond_expect_df['现价'] <= 120.0) & (bond_expect_df['纯债溢价率'] <= 11)]
+    bond_expect_selected_df = bond_expect_selected_df.sort_values('剩余规模', ascending=True)
     bond_expect_selected_df.to_excel(writer, optimaltag)
 
 def select_bank_some(writer,bond_expect_df,tag):
     bond_expect_df = bond_expect_df.sort_values('现价', ascending=True)
     bond_expect_df.to_excel(writer, tag)
     #optimaltag = 'opt-'+ tag;
-    #bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 7.0) & (bond_expect_df['最新价'] <= 120.0) & (bond_expect_df['到期税前收益'] > 0.0)]
-    #bond_expect_selected_df = bond_expect_selected_df.sort_values('纯债溢价率', ascending=True)
+    #bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 7.0) & (bond_expect_df['最新价'] <= 120.0) & (bond_expect_df['纯债溢价率'] <= 11)]
+    #bond_expect_selected_df = bond_expect_selected_df.sort_values('剩余规模', ascending=True)
     #bond_expect_selected_df.to_excel(writer, optimaltag)
 
 
