@@ -73,19 +73,27 @@ def get_pass_days(date):
 		delt = datetime.datetime.now() - datetime.datetime.strptime(date, '%Y%m%d')
 		return delt.days
 
-def select_interest_some(writer,bond_expect_df,tag):
-    bond_expect_df.to_excel(writer, tag)
-    optimaltag = 'opt-'+ tag;
-    bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 7.0) & (bond_expect_df['现价'] <= 120.0) & (bond_expect_df['纯债溢价率'] <= 11)]
-    bond_expect_selected_df = bond_expect_selected_df.sort_values('剩余规模', ascending=True)
-    bond_expect_selected_df.to_excel(writer, optimaltag)
+def select_interest_some(writer,bond_expect_df,tag,mkcode):
+    try:
+      bond_expect_df.to_excel(writer, tag)
+      optimaltag = 'opt-'+ tag;
+      bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 7.0) & (bond_expect_df['现价'] <= 120.0) & (bond_expect_df['到期税前收益'] > 0)]
+      bond_expect_selected_df = bond_expect_selected_df.sort_values('纯债溢价率', ascending=True)
+      bond_expect_selected_df = bond_expect_selected_df[bond_expect_selected_df['评级'].str.contains(r'^A.*?')]
+      bond_expect_selected_df['代码']=bond_expect_selected_df.apply(lambda row:mkcode+row['代码'],axis=1)
+      bond_expect_selected_df.to_excel(writer, optimaltag)
+      return bond_expect_selected_df[['代码','转债名称']]
+    except Exception as result:
+       print(result)
+       bond_interest_df = pd.DataFrame(columns=['代码', '转债名称'])
+       return bond_interest_df
 
 def select_bank_some(writer,bond_expect_df,tag):
     bond_expect_df = bond_expect_df.sort_values('现价', ascending=True)
     bond_expect_df.to_excel(writer, tag)
     #optimaltag = 'opt-'+ tag;
-    #bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 7.0) & (bond_expect_df['最新价'] <= 120.0) & (bond_expect_df['纯债溢价率'] <= 11)]
-    #bond_expect_selected_df = bond_expect_selected_df.sort_values('剩余规模', ascending=True)
+    #bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 4.0) & (bond_expect_df['最新价'] <= 120.0) & (bond_expect_df['到期税前收益'] > 0)]
+    #bond_expect_selected_df = bond_expect_selected_df.sort_values('纯债溢价率', ascending=True)
     #bond_expect_selected_df.to_excel(writer, optimaltag)
 
 
@@ -156,14 +164,20 @@ if __name__=='__main__':
     fileout = tnow.strftime('%Y_%m_%d') + '_out.xlsx'
     outanalypath =  "%s/%s" % (filefolder,fileout)
     writer = pd.ExcelWriter(outanalypath)
+    
+    
     bond_expect_sort_df.to_excel(writer,'analyze')
 
     select_bank_some(writer, bond_expect_bank_df, 'bank')
-    select_interest_some(writer, bond_expect_startup_df, 'startup')
-    select_interest_some(writer, bond_expect_middlesmall_df, 'middlesmall')
-    select_interest_some(writer, bond_expect_bigboard_df, 'bigboard')
-    select_interest_some(writer, bond_expect_scitech_df, 'scitech')
+    
+    startup_df = select_interest_some(writer, bond_expect_startup_df, 'startup','sz')
+    middlesmall_df = select_interest_some(writer, bond_expect_middlesmall_df, 'middlesmall','sz')
+    bigboard_df = select_interest_some(writer, bond_expect_bigboard_df, 'bigboard','sh')
+    scitech_df = select_interest_some(writer, bond_expect_scitech_df, 'scitech','sh')
 
+    #bond_interest_df = pd.DataFrame(columns=['code', 'name'])
+    bond_interest_df = pd.concat([startup_df,middlesmall_df,bigboard_df,scitech_df])
+    bond_interest_df.to_excel(writer,'selected')
 
     writer.save()
     print("value distance of  'unlist and analye' :" + fileout)

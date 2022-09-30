@@ -175,11 +175,16 @@ def select_interest_some(writer,bond_expect_df,tag):
 		bond_expect_selected_df.to_excel(writer, optimaltag)
 
 if __name__=='__main__':
-
-		interestpath = "./interest.xlsx"
-		isExist = os.path.exists(interestpath)
-		if not isExist:
-			print("please make sure the ./interest.xlsx")
+		from sys import argv
+		interestpath = ''
+		if len(argv) > 1:
+			interestpath = argv[1]
+			isExist = os.path.exists(interestpath)
+			if not isExist:
+				print("please make sure the path:" + interestpath)
+				exit(1)
+		else:
+			print("please run like 'python cartridge.py [file]'")
 			exit(1)
 
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
@@ -192,8 +197,13 @@ if __name__=='__main__':
 			name = bondrow['name'];bond = bondrow['code'];
 
 			dailypath =  "./bond/%s.xlsx" % (bond)
-			resultpath,insheetname = get_akshare_daily(dailypath,bond)
-			print("data of path:" + resultpath + ",sheetname:" +insheetname)
+			
+			try:
+				resultpath,insheetname = get_akshare_daily(dailypath,bond)
+			except Exception as result:
+				print("get datapath error:" + dailypath)
+				continue
+			print("get datapath ok:" + resultpath + ",sheetname:" +insheetname)
 
 
 			#bond_cov_daily_df = pd.read_excel(resultpath, insheetname)[['date', 'close']]
