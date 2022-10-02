@@ -22,18 +22,42 @@ import matplotlib.pyplot as plt
 import openpyxl
 from sklearn.cluster import DBSCAN
 
-def get_akshare_daily(xlsfile,stock):
+def get_akshare_daily(stock,end):
+	xlsfile =  "./bond/primary/%s.xlsx" % (bond)
+	
+	datefolder = r'./bond/' + end
+	folderExist = os.path.exists(datefolder)
+	if not folderExist:
+			os.makedirs(datefolder)
+			print("daily:%s create" % (datefolder))
+	else:
+			print("daily:%s exist" % (datefolder))
+	outfile = "./%s/%s.xlsx" % (datefolder,bond)
 	shname='daily'
+	
 	isExist = os.path.exists(xlsfile)
+	#dateend = end
+	dateend = datetime.datetime.strptime(end,'%Y-%m-%d').strftime("%Y-%m-%d %H:%M:%S")
+	
 	if not isExist:
 		bond_zh_hs_cov_daily_df = ak.bond_zh_hs_cov_daily(symbol=stock)
 		bond_zh_hs_cov_daily_df.to_excel(xlsfile,sheet_name=shname)
+		print("xfsfile:%s create" % (xlsfile))
 		
-		print("xfsfile:%s create" % (xlsfile))  
+		bond_zh_hs_cov_daily_df = pd.read_excel(xlsfile, sheet_name=shname,index_col=0,converters={'date': str})
+		bond_zh_hs_cov_daily_df = bond_zh_hs_cov_daily_df[ bond_zh_hs_cov_daily_df['date'] <= dateend ]
+		if bond_zh_hs_cov_daily_df.empty:
+			raise ValueError('no data before ' + end)
+		bond_zh_hs_cov_daily_df.to_excel(outfile,sheet_name=shname)
+		print("xfsfile:%s create" % (outfile))  
 	else:
-		print("xfsfile:%s exist" % (xlsfile))
-	
-	return xlsfile,shname
+		bond_zh_hs_cov_daily_df = pd.read_excel(xlsfile, sheet_name=shname,index_col=0,converters={'date': str})
+		bond_zh_hs_cov_daily_df = bond_zh_hs_cov_daily_df[ bond_zh_hs_cov_daily_df['date'] <= dateend ]
+		if bond_zh_hs_cov_daily_df.empty:
+			raise ValueError('no data before ' + end)
+		bond_zh_hs_cov_daily_df.to_excel(outfile,sheet_name=shname)
+		print("xfsfile:%s create" % (outfile))
+	return outfile,shname
 
 def getkellyb(value,v0,v25,v50,v75):
 	# 赔率=获胜时的盈利/失败时的亏损
@@ -177,14 +201,21 @@ def select_interest_some(writer,bond_expect_df,tag):
 if __name__=='__main__':
 		from sys import argv
 		interestpath = ''
-		if len(argv) > 1:
+		today = datetime.datetime.now()
+		if len(argv) > 2:
+			if argv[2] == '*':
+				today = datetime.datetime.now().strftime('%Y-%m-%d')
+			else:
+				today = datetime.datetime.strptime(argv[2], '%Y-%m-%d').strftime('%Y-%m-%d')
+			print('today'+ today)
+			
 			interestpath = argv[1]
 			isExist = os.path.exists(interestpath)
 			if not isExist:
 				print("please make sure the path:" + interestpath)
 				exit(1)
 		else:
-			print("please run like 'python cartridge.py [file]'")
+			print("please run like 'python cartridge.py [file] [2022-08-22]'")
 			exit(1)
 
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
@@ -196,14 +227,13 @@ if __name__=='__main__':
 		for i, bondrow in bond_interest_df.iterrows():
 			name = bondrow['name'];bond = bondrow['code'];
 
-			dailypath =  "./bond/%s.xlsx" % (bond)
-			
 			try:
-				resultpath,insheetname = get_akshare_daily(dailypath,bond)
+				resultpath,insheetname = get_akshare_daily(bond,today)
 			except Exception as result:
-				print("get datapath error:" + dailypath)
+				print(bond + " get bond error:" + str(result))
 				continue
 			print("get datapath ok:" + resultpath + ",sheetname:" +insheetname)
+
 
 
 			#bond_cov_daily_df = pd.read_excel(resultpath, insheetname)[['date', 'close']]
@@ -242,15 +272,18 @@ if __name__=='__main__':
 			kellyf1 = ((kellyb1+1)*kellyp-1)/kellyb1
 
 			#异动指标
-			bond_cov_abnormal_df = get_abnormal_dbscan_df(resultpath,insheetname)
-			abnormalcount = len(bond_cov_abnormal_df)
-			print("abnormalcount:%d" % abnormalcount)
-			#250个交易日
-			abnormalperyear = abnormalcount/tradeyears
-			abnormallatest = bond_cov_abnormal_df.iloc[-1][0]
-			abnormalminvol = np.min(bond_cov_abnormal_df['volume'])
-			#print("--->"+str(abnormalminvol))
-			
+			try:
+				bond_cov_abnormal_df = get_abnormal_dbscan_df(resultpath,insheetname)
+				abnormalcount = len(bond_cov_abnormal_df)
+				print("abnormalcount:%d" % abnormalcount)
+				#250个交易日
+				abnormalperyear = abnormalcount/tradeyears
+				abnormallatest = bond_cov_abnormal_df.iloc[-1][0]
+				abnormalminvol = np.min(bond_cov_abnormal_df['volume'])
+				#print("--->"+str(abnormalminvol))
+			except Exception as result:
+				print("get abnormal error:" + bond)
+				continue
 
 			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,
 			'当前价格':value,'00分位':valuemin,'25分位':value25,'50分位':value50,'75分位':value75,'100分位':valuemax,'75涨幅':inc75,
@@ -258,8 +291,8 @@ if __name__=='__main__':
 
 			print("名称,胜率，赔率,下注比例:",name,kellyp,kellyb1,kellyf1)
 		#print(bond_kelly_df)
-		tnow = datetime.datetime.now()
-		fileout = tnow.strftime('%Y_%m_%d') + '_kelly.xlsx'
+
+		fileout = today + '_kelly.xlsx'
 		outanalypath = "%s/%s" % ('bond', fileout)
 		writer = pd.ExcelWriter(outanalypath)
 		#bond_kelly_df.to_excel(writer, 'kelly')
