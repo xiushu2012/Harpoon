@@ -221,11 +221,11 @@ if __name__=='__main__':
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
 
 
-		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例', '当前价格', '00分位', '25分位', '50分位', '75分位', '100分位', '75涨幅','交易周期','年均异动','最后异动','异动阈值'])
+		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例', '当前价格', '00分位', '25分位', '50分位', '75分位', '100分位', '75涨幅','剩余规模','交易周期','年均异动','最后异动','异动阈值'])
 		money = 'money'
 		ratio = 'ratio'
 		for i, bondrow in bond_interest_df.iterrows():
-			name = bondrow['name'];bond = bondrow['code'];
+			name = bondrow['name'];bond = bondrow['code'];remain= bondrow['remain']
 
 			try:
 				resultpath,insheetname = get_akshare_daily(bond,today)
@@ -287,7 +287,7 @@ if __name__=='__main__':
 
 			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,
 			'当前价格':value,'00分位':valuemin,'25分位':value25,'50分位':value50,'75分位':value75,'100分位':valuemax,'75涨幅':inc75,
-			'交易周期':tradeyears,'年均异动':abnormalperyear,'最后异动':abnormallatest,'异动阈值':abnormalminvol},ignore_index=True)
+			'剩余规模':remain,'交易周期':tradeyears,'年均异动':abnormalperyear,'最后异动':abnormallatest,'异动阈值':abnormalminvol},ignore_index=True)
 
 			print("名称,胜率，赔率,下注比例:",name,kellyp,kellyb1,kellyf1)
 		#print(bond_kelly_df)

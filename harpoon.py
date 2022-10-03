@@ -82,10 +82,10 @@ def select_interest_some(writer,bond_expect_df,tag,mkcode):
       bond_expect_selected_df = bond_expect_selected_df[bond_expect_selected_df['评级'].str.contains(r'^A.*?')]
       bond_expect_selected_df['代码']=bond_expect_selected_df.apply(lambda row:mkcode+row['代码'],axis=1)
       bond_expect_selected_df.to_excel(writer, optimaltag)
-      return bond_expect_selected_df[['代码','转债名称']]
+      return bond_expect_selected_df[['代码','转债名称','剩余规模']]
     except Exception as result:
        print(result)
-       bond_interest_df = pd.DataFrame(columns=['代码', '转债名称'])
+       bond_interest_df = pd.DataFrame(columns=['代码', '转债名称','剩余规模'])
        return bond_interest_df
 
 def select_bank_some(writer,bond_expect_df,tag):
