@@ -57,7 +57,7 @@ def calc_interest_value(price,ratio,year):
     else:
         #ratio = float(ratio.strip('%'))/100
         ratio = float(ratio)/100
-        return price*(1+ratio)**year
+        return (price*(1+ratio)**year).real
 
 def calc_bond_overflow(price,bondvalue):
     return 100 * (price - bondvalue) / bondvalue
@@ -82,10 +82,10 @@ def select_interest_some(writer,bond_expect_df,tag,mkcode):
       bond_expect_selected_df = bond_expect_selected_df[bond_expect_selected_df['评级'].str.contains(r'^A.*?')]
       bond_expect_selected_df['代码']=bond_expect_selected_df.apply(lambda row:mkcode+row['代码'],axis=1)
       bond_expect_selected_df.to_excel(writer, optimaltag)
-      return bond_expect_selected_df[['代码','转债名称','剩余规模']]
+      return bond_expect_selected_df[['代码','转债名称','剩余规模','含息价']]
     except Exception as result:
        print(result)
-       bond_interest_df = pd.DataFrame(columns=['代码', '转债名称','剩余规模'])
+       bond_interest_df = pd.DataFrame(columns=['代码', '转债名称','剩余规模','含息价'])
        return bond_interest_df
 
 def select_bank_some(writer,bond_expect_df,tag):
