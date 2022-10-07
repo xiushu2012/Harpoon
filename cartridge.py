@@ -9,6 +9,10 @@ import os
 import matplotlib.pyplot as plt
 import openpyxl
 
+import warnings
+from pandas.core.common import SettingWithCopyWarning
+
+
 
 # -*- coding: utf-8 -*-
 
@@ -80,9 +84,11 @@ def getkellybEx(value,v0,v100):
 	kellyb = 0.01
 	if value <= v0:
 		kellyb = (v100 - value) / (value - 1)
+	elif value >= v100:
+		kellyb = (value - 1) / (value - v0)
 	else:
 		kellyb = (v100 - value) / (value - v0)
-	print("valule0,value100:", v0,v100)
+	print("kellyv0:%f,kellyv100:%f" % (v0,v100))
 	return kellyb
 
 
@@ -107,7 +113,7 @@ def get_abnormal_dbscan_df(path,name):
 	
 	middlesta = middle_volume_df['volume'].describe()
 	middlepes = middlesta['std']
-	print("valuelow:%f,valuehigh:%f,EPS:%f" %(valuelow,valuehigh,middlepes))
+	print("volumnlow:%f,volumnhigh:%f,EPS:%f" %(valuelow,valuehigh,middlepes))
 	
 
 	outlier_det=DBSCAN(min_samples=2,eps=middlepes)
@@ -121,7 +127,7 @@ def get_abnormal_dbscan_df(path,name):
 	
 	abnormal_index = bond_cov_abnormal_df.index.values.tolist()
 	for cur, nxt in zip (abnormal_index, abnormal_index [1:] ):
-		print (cur, nxt)
+		#print (cur, nxt)
 
 		#左右都闭区间
 		abnormal_next_df = bond_cov_volume_df.loc[cur:nxt,:][['open','high','low','close']]
@@ -194,12 +200,14 @@ def select_interest_some(writer,bond_expect_df,tag):
 		bond_expect_df = bond_expect_df.sort_values('下注比例', ascending=False)
 		bond_expect_df.to_excel(writer, tag)
 		optimaltag = 'opt-'+ tag;
-		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 7.0) & (bond_expect_df['下注比例'] >= 0.3) & (bond_expect_df['交易周期'] >= 1)]
+		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 7.0) & (bond_expect_df['下注比例'] >= 0.1) & (bond_expect_df['交易周期'] >= 1)]
 		bond_expect_selected_df = bond_expect_selected_df.sort_values('剩余规模', ascending=True)
 		bond_expect_selected_df.to_excel(writer, optimaltag)
 
 if __name__=='__main__':
 		from sys import argv
+		warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
+		
 		interestpath = ''
 		today = datetime.datetime.now()
 		if len(argv) > 2:
@@ -207,7 +215,7 @@ if __name__=='__main__':
 				today = datetime.datetime.now().strftime('%Y-%m-%d')
 			else:
 				today = datetime.datetime.strptime(argv[2], '%Y-%m-%d').strftime('%Y-%m-%d')
-			print('today'+ today)
+			print('**************computerday:%s*************' % today)
 			
 			interestpath = argv[1]
 			isExist = os.path.exists(interestpath)
@@ -221,13 +229,13 @@ if __name__=='__main__':
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
 
 
-		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例', '当前价格','保底涨幅','保底价格','75涨幅价','75分位价','00分位', '50分位', '100分位' ,'剩余规模','交易周期','年均异动','最后异动','异动阈值'])
+		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例', '当前价格','保底涨幅','保底价格','异动涨幅','异动价格','75涨幅','00分位', '50分位', '100分位' ,'剩余规模','交易周期','年均异动','最后异动','异动阈值'])
 		money = 'money'
 		ratio = 'ratio'
 		for i, bondrow in bond_interest_df.iterrows():
 			name = bondrow['name'];bond = bondrow['code'];
 			remain= bondrow['remain'];expval= bondrow['expval'];
-
+			print('#########################名称:%s########################' % name)
 			try:
 				resultpath,insheetname = get_akshare_daily(bond,today)
 			except Exception as result:
@@ -236,17 +244,11 @@ if __name__=='__main__':
 			print("get datapath ok:" + resultpath + ",sheetname:" +insheetname)
 
 
-
-			#bond_cov_daily_df = pd.read_excel(resultpath, insheetname)[['date', 'close']]
-			#dailysta = bond_cov_daily_df['close'].describe()
 			bond_cov_daily_df = get_daily_df(resultpath, insheetname, money)
 			dailysta = bond_cov_daily_df[money].describe()
-
 			bond_cov_biginc_df = get_dailyinc_df(resultpath, insheetname,ratio)
 			incsta = bond_cov_biginc_df[ratio].describe()
-			
-			print(dailysta)
-			print(incsta)
+			inc75 = incsta['75%']
 
 			counts = dailysta['count']
 			tradeyears  =  counts/4/250
@@ -254,30 +256,28 @@ if __name__=='__main__':
 			date = bond_cov_daily_df.loc[counts-1][0]
 			value = bond_cov_daily_df.loc[counts-1][1]
 
-			valuemin = dailysta['min']
-			valuemax = dailysta['max']
-			value25 = dailysta['25%']
-			value50 = dailysta['50%']
-			value75 = dailysta['75%']
-
-			inc75 = incsta['75%']
-			valinc75=(inc75+1)*value
-			# 赔率=获胜时的盈利/失败时的亏损
-			kellyb1= getkellybEx(value,valuemin,valuemax)
+			valuemin = dailysta['min'];valuemax = dailysta['max']
+			value25 = dailysta['25%'];value50 = dailysta['50%'];value75 = dailysta['75%']
 
 			price =  bond_cov_daily_df[money]
 			wincounts = price[ price > value ].count()
 			#成功总次数/(成功总次数+失败总次数)
 			kellyp = wincounts / counts
 
-			#下注比例
-			kellyf1 = ((kellyb1+1)*kellyp-1)/kellyb1
+
 
 			#异动指标
 			try:
 				bond_cov_abnormal_df = get_abnormal_dbscan_df(resultpath,insheetname)
+				highsta = bond_cov_abnormal_df['high'].describe()
+				
+				#赔率2=异动条件下获胜最大盈利中位数/失败时的最大亏损
+				abnval = highsta['50%']
+				kellyb1= getkellybEx(value,valuemin,abnval)
+				print("abnormalhighmiddle:%f" % abnval)
+				
 				abnormalcount = len(bond_cov_abnormal_df)
-				print("abnormalcount:%d" % abnormalcount)
+				#print("abnormalcount:%d" % abnormalcount)
 				#250个交易日
 				abnormalperyear = abnormalcount/tradeyears
 				abnormallatest = bond_cov_abnormal_df.iloc[-1][0]
@@ -286,13 +286,19 @@ if __name__=='__main__':
 			except Exception as result:
 				print("get abnormal error:" + bond)
 				continue
+
+			#下注比例
+			kellyf1 = ((kellyb1+1)*kellyp-1)/kellyb1
+			print("########胜率:%f,赔率:%f,下注比例:%f########" %(kellyp,kellyb1,kellyf1))
 			
 			exppercent = 100*(expval-value)/value
+			abnpercent = 100*(abnval-value)/value
+			
 			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,
-			'当前价格':value,'保底涨幅':exppercent,'保底价格':expval,'75涨幅价':valinc75,'75分位价':value75,'00分位':valuemin,'50分位':value50,'100分位':valuemax,
+			'当前价格':value,'保底涨幅':exppercent,'保底价格':expval,'异动涨幅':abnpercent,'异动价格':abnval,'75涨幅':inc75,'00分位':valuemin,'50分位':value50,'100分位':valuemax,
 			'剩余规模':remain,'交易周期':tradeyears,'年均异动':abnormalperyear,'最后异动':abnormallatest,'异动阈值':abnormalminvol},ignore_index=True)
 
-			print("名称,胜率，赔率,下注比例:",name,kellyp,kellyb1,kellyf1)
+
 		#print(bond_kelly_df)
 
 		fileout = today + '_kelly.xlsx'
