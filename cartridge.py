@@ -8,23 +8,10 @@ import datetime
 import os
 import matplotlib.pyplot as plt
 import openpyxl
-
+from sklearn.cluster import DBSCAN
+import time
 import warnings
 from pandas.core.common import SettingWithCopyWarning
-
-
-
-# -*- coding: utf-8 -*-
-
-import akshare as ak
-import numpy as np  
-import pandas as pd  
-import math
-import datetime
-import os
-import matplotlib.pyplot as plt
-import openpyxl
-from sklearn.cluster import DBSCAN
 
 def get_akshare_daily(stock,end):
 	xlsfile =  "./bond/primary/%s.xlsx" % (bond)
@@ -115,7 +102,7 @@ def get_abnormal_dbscan_df(path,name):
 	middlepes = middlesta['std']
 	print("volumnlow:%f,volumnhigh:%f,EPS:%f" %(valuelow,valuehigh,middlepes))
 	
-
+	#first cluster to find abnormal days
 	outlier_det=DBSCAN(min_samples=2,eps=middlepes)
 	clusters = outlier_det.fit_predict(bond_cov_volume_df[['volume']].values)
 	print("abnormal volumn:%d" % list(clusters).count(-1))
@@ -139,6 +126,13 @@ def get_abnormal_dbscan_df(path,name):
 		bond_cov_abnormal_df.loc[cur,'max'] = 100*(np.max(abnormal_next_array)-abnormal_cur_close)/abnormal_cur_close
 		bond_cov_abnormal_df.loc[cur,'min'] = 100*(np.min(abnormal_next_array)-abnormal_cur_close)/abnormal_cur_close
 
+	#second cluster to cut abnormaldays to several paragraph
+	bond_cov_abnormal_df['ts'] = bond_cov_abnormal_df.apply(lambda row: time.mktime(time.strptime(str(row['date']),"%Y-%m-%d %H:%M:%S")), axis=1)
+	#print(abnormal_df[['ts']].values)
+	abnlier_det=DBSCAN(min_samples=2,eps=7*86400)
+	bond_cov_abnormal_df['type'] = abnlier_det.fit_predict(bond_cov_abnormal_df[['ts']].values)
+	#print(abnormal_df['type'])
+	
 	#print(bond_cov_volume_df)
 	if not os.path.exists(path):
 		bond_cov_abnormal_df.to_excel(writer, 'abnormal')
@@ -146,6 +140,41 @@ def get_abnormal_dbscan_df(path,name):
 		with pd.ExcelWriter(path,engine='openpyxl',mode='a',if_sheet_exists='replace') as writer:
 			bond_cov_abnormal_df.to_excel(writer, 'abnormal')	
 	return bond_cov_abnormal_df
+
+
+def guess_abnormal_parameter(abnormal_df):
+
+	#strts0 = abnormal_df['date'].tolist()[0]
+	#print('classify ' + strts0)
+	#ts0 = time.mktime(time.strptime(str(strts0),"%Y-%m-%d %H:%M:%S"))  row['date']
+	typedic = {}
+	abnormal_high_df=abnormal_df[['high','type']]
+	transtype = 0
+	for i, abnrow in abnormal_high_df.iterrows():
+			high = abnrow['high'];type = abnrow['type'];
+			if type == -1:
+				transtype = transtype - 1
+				type = transtype
+			
+			if type in typedic.keys():
+				typedic[type][0] =  typedic[type][0] + 1
+				typedic[type][1] =  typedic[type][1] + high
+			else:
+				value=[]
+				value.append(1);
+				value.append(high)
+				typedic[type]=value
+
+	#print(typedic)
+	
+	type_df = pd.DataFrame(columns=['flag', 'avg'])
+	for flag in typedic.keys():
+			#print(flag)
+			avg = typedic[flag][1]/typedic[flag][0]
+			type_df = type_df.append({'flag':flag,'avg':avg},ignore_index=True)
+	#print(type_df)
+	avgsta = type_df['avg'].describe()
+	return avgsta['count'],avgsta['50%']
 
 
 def get_abnormal_standard_df(path,name):
@@ -168,6 +197,8 @@ def get_abnormal_standard_df(path,name):
 		with pd.ExcelWriter(path,engine='openpyxl',mode='a') as writer:
 			bond_cov_volume_df.to_excel(writer, 'abnormal',index=False)	
 	return bond_cov_volume_df
+
+
 
 
 def get_daily_df(path,name,price):
@@ -200,7 +231,7 @@ def select_interest_some(writer,bond_expect_df,tag):
 		bond_expect_df = bond_expect_df.sort_values('下注比例', ascending=False)
 		bond_expect_df.to_excel(writer, tag)
 		optimaltag = 'opt-'+ tag;
-		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 7.0) & (bond_expect_df['下注比例'] >= 0.1) & (bond_expect_df['交易周期'] >= 1)]
+		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 2.0) & (bond_expect_df['下注比例'] >= 0.1) & (bond_expect_df['交易周期'] >= 1)]
 		bond_expect_selected_df = bond_expect_selected_df.sort_values('保底涨幅', ascending=False)
 		bond_expect_selected_df.to_excel(writer, optimaltag)
 
@@ -269,15 +300,16 @@ if __name__=='__main__':
 			#异动指标
 			try:
 				bond_cov_abnormal_df = get_abnormal_dbscan_df(resultpath,insheetname)
-				highsta = bond_cov_abnormal_df['high'].describe()
+				cntguess,valguess= guess_abnormal_parameter(bond_cov_abnormal_df)
+				print("guess abnormal counts:%f,guess abnormal avg:%f" % (cntguess,valguess)) 
 				
-				#赔率2=异动条件下获胜最大盈利中位数/失败时的最大亏损
-				abnval = highsta['50%']
+				#赔率2=各次异动条件下最大盈利中位数/失败时的最大亏损
+				abnval = valguess
 				kellyb1= getkellybEx(value,valuemin,abnval)
 				print("abnormalhighmiddle:%f" % abnval)
-				
-				abnormalcount = len(bond_cov_abnormal_df)
+				abnormalcount = cntguess
 				#print("abnormalcount:%d" % abnormalcount)
+				
 				#250个交易日
 				abnormalperyear = abnormalcount/tradeyears
 				abnormallatest = bond_cov_abnormal_df.iloc[-1][0]
