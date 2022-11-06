@@ -91,10 +91,11 @@ def select_interest_some(writer,bond_expect_df,tag,mkcode):
 def select_bank_some(writer,bond_expect_df,tag):
     bond_expect_df = bond_expect_df.sort_values('现价', ascending=True)
     bond_expect_df.to_excel(writer, tag)
-    #optimaltag = 'opt-'+ tag;
-    #bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 4.0) & (bond_expect_df['最新价'] <= 120.0) & (bond_expect_df['到期税前收益'] > 0)]
-    #bond_expect_selected_df = bond_expect_selected_df.sort_values('纯债溢价率', ascending=True)
-    #bond_expect_selected_df.to_excel(writer, optimaltag)
+
+def select_revise_down(writer,bond_expect_df,tag):
+    bond_expect_revise_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 15.0) & (bond_expect_df['现价'] <= 115.0) & (bond_expect_df['剩余年限'] <= 3)]
+    bond_expect_revise_df = bond_expect_revise_df.sort_values('到期税前收益', ascending=False)
+    bond_expect_revise_df.to_excel(writer, tag)
 
 
 
@@ -167,7 +168,7 @@ if __name__=='__main__':
     
     
     bond_expect_sort_df.to_excel(writer,'analyze')
-
+    select_revise_down(writer, bond_expect_sort_df, 'revise')
     select_bank_some(writer, bond_expect_bank_df, 'bank')
     
     startup_df = select_interest_some(writer, bond_expect_startup_df, 'startup','sz')
