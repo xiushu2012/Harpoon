@@ -10,6 +10,7 @@ import datetime
 import os
 import matplotlib.pyplot as plt
 import openpyxl
+import re
 
 pd.set_option('display.max_rows',None)
 pd.set_option('display.max_columns',None)
@@ -65,6 +66,17 @@ def calc_bond_overflow(price,bondvalue):
 def calc_stock_overflow(overflow):
     #return float(overflow.strip('%'))
     return float(overflow)
+    
+def calc_new_code(code):
+    newcode = ''
+    codefind = re.findall(pattern='^(127|128|123).*?',string=code)
+    #print(codefind)
+    if len(codefind)>0:
+      newcode = 'sz' + code
+    else:
+      newcode = 'sh' + code
+    #print(newcode)
+    return newcode    
 
 def get_pass_days(date):
 	if date == '-':
@@ -88,16 +100,21 @@ def select_interest_some(writer,bond_expect_df,tag,mkcode):
        bond_interest_df = pd.DataFrame(columns=['代码', '转债名称','剩余规模','含息价'])
        return bond_interest_df
 
+def select_kgood_some(writer,bond_expect_df,tag):
+    try:
+      bond_expect_kgood_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 4.0) & (bond_expect_df['现价'] <= 120.0) & (bond_expect_df['剩余年限'] <= 3) & (bond_expect_df['剩余年限'] >= 1)]
+      bond_expect_kgood_df = bond_expect_kgood_df.sort_values('估值距离', ascending=True)
+      bond_expect_kgood_df.to_excel(writer, tag)
+      bond_expect_kgood_df['代码'] = bond_expect_kgood_df.apply(lambda row: calc_new_code(row['代码']), axis=1)
+      return bond_expect_kgood_df[['代码','转债名称','剩余规模','含息价']]
+    except Exception as result:
+      print(result)
+      bond_expect_kgood_df = pd.DataFrame(columns=['代码', '转债名称','剩余规模','含息价'])
+      return bond_expect_kgood_df
+
 def select_bank_some(writer,bond_expect_df,tag):
     bond_expect_df = bond_expect_df.sort_values('现价', ascending=True)
     bond_expect_df.to_excel(writer, tag)
-
-def select_revise_down(writer,bond_expect_df,tag):
-    bond_expect_revise_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 15.0) & (bond_expect_df['现价'] <= 115.0) & (bond_expect_df['剩余年限'] <= 3)]
-    bond_expect_revise_df = bond_expect_revise_df.sort_values('到期税前收益', ascending=False)
-    bond_expect_revise_df.to_excel(writer, tag)
-
-
 
 
 if __name__=='__main__':
@@ -168,8 +185,10 @@ if __name__=='__main__':
     
     
     bond_expect_sort_df.to_excel(writer,'analyze')
-    select_revise_down(writer, bond_expect_sort_df, 'revise')
     select_bank_some(writer, bond_expect_bank_df, 'bank')
+    
+    bond_kgood_df = select_kgood_some(writer, bond_expect_sort_df, 'kgood')
+    bond_kgood_df.to_excel(writer,'bested')
     
     startup_df = select_interest_some(writer, bond_expect_startup_df, 'startup','sz')
     middlesmall_df = select_interest_some(writer, bond_expect_middlesmall_df, 'middlesmall','sz')
