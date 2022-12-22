@@ -188,7 +188,7 @@ if __name__=='__main__':
     select_bank_some(writer, bond_expect_bank_df, 'bank')
     
     bond_kgood_df = select_kgood_some(writer, bond_expect_sort_df, 'kgood')
-    bond_kgood_df.to_excel(writer,'bested')
+    bond_kgood_df.to_excel(writer,'braised')
     
     startup_df = select_interest_some(writer, bond_expect_startup_df, 'startup','sz')
     middlesmall_df = select_interest_some(writer, bond_expect_middlesmall_df, 'middlesmall','sz')
