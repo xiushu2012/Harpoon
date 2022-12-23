@@ -89,7 +89,7 @@ def select_interest_some(writer,bond_expect_df,tag,mkcode):
     try:
       bond_expect_df.to_excel(writer, tag)
       optimaltag = 'opt-'+ tag;
-      bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 7.0) & (bond_expect_df['现价'] <= 120.0) & (bond_expect_df['到期税前收益'] > 0)]
+      bond_expect_selected_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 5.0) & (bond_expect_df['现价'] <= 120.0) & (bond_expect_df['到期税前收益'] > 0)]
       bond_expect_selected_df = bond_expect_selected_df.sort_values('纯债溢价率', ascending=True)
       bond_expect_selected_df = bond_expect_selected_df[bond_expect_selected_df['评级'].str.contains(r'^A.*?')]
       bond_expect_selected_df['代码']=bond_expect_selected_df.apply(lambda row:mkcode+row['代码'],axis=1)
