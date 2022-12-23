@@ -102,7 +102,11 @@ def select_interest_some(writer,bond_expect_df,tag,mkcode):
 
 def select_kgood_some(writer,bond_expect_df,tag):
     try:
-      bond_expect_kgood_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 4.0) & (bond_expect_df['现价'] <= 120.0) & (bond_expect_df['剩余年限'] <= 3) & (bond_expect_df['剩余年限'] >= 1)]
+      bond_expect_kgood_df = bond_expect_df[(bond_expect_df['估值距离'] <= 50) 
+                                            & (bond_expect_df['剩余规模'] <= 4.0) 
+                                            & (bond_expect_df['现价'] <= 120.0) 
+                                            & (bond_expect_df['剩余年限'] <= 3.5) 
+                                            & (bond_expect_df['剩余年限'] >= 1)]
       bond_expect_kgood_df = bond_expect_kgood_df.sort_values('估值距离', ascending=True)
       bond_expect_kgood_df.to_excel(writer, tag)
       bond_expect_kgood_df['代码'] = bond_expect_kgood_df.apply(lambda row: calc_new_code(row['代码']), axis=1)
