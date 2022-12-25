@@ -78,6 +78,13 @@ def getkellybEx(value,v0,v100):
 	print("kellyv0:%f,kellyv100:%f" % (v0,v100))
 	return kellyb
 
+def getkellybKx(value,expval,ltyear):
+	# 赔率=获胜时的盈利/失败时的亏损(利息的损失)
+	# 利息损失 = (value*(1+大额存单利率)**2 -value) - (value*(1+到期利率)**2 - value)
+	kellyb = (150-value)/(value*(1+0.03)**ltyear - expval)
+	print("kellyb:%f" % (kellyb))
+	return kellyb
+
 
 def cal_close_inc(volume_df,close):
 	for i,r in volume_df.iterrows():
@@ -256,16 +263,21 @@ if __name__=='__main__':
 		else:
 			print("please run like 'python cartridge.py [file] [2022-08-22]'")
 			exit(1)
-
+		
+		KellyTypeB = True
+		if 'braised.xlsx' in interestpath:
+			KellyTypeB = False
+			
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
-
-
 		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例', '当前价格','保底涨幅','保底价格','异动涨幅','异动价格','75涨幅','00分位', '50分位', '100分位' ,'剩余规模','交易周期','年均异动','最后异动','异动阈值'])
 		money = 'money'
 		ratio = 'ratio'
 		for i, bondrow in bond_interest_df.iterrows():
-			name = bondrow['name'];bond = bondrow['code'];
-			remain= bondrow['remain'];expval= bondrow['expval'];
+			name = bondrow['name'];
+			bond = bondrow['code'];
+			remain= bondrow['remain'];
+			expval= bondrow['expval'];
+			ltyear = bondrow['lastyear'];
 			print('#########################名称:%s########################' % name)
 			try:
 				resultpath,insheetname = get_akshare_daily(bond,today)
@@ -305,7 +317,8 @@ if __name__=='__main__':
 				
 				#赔率2=各次异动条件下最大盈利中位数/失败时的最大亏损
 				abnval = valguess
-				kellyb1= getkellybEx(value,valuemin,abnval)
+				#kellyb1= getkellybEx(value,valuemin,abnval)  
+				kellyb1 = getkellybEx(value,valuemin,abnval) if KellyTypeB else getkellybKx(value,expval,ltyear)
 				print("abnormalhighmiddle:%f" % abnval)
 				abnormalcount = cntguess
 				#print("abnormalcount:%d" % abnormalcount)

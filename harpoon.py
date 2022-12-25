@@ -94,10 +94,10 @@ def select_interest_some(writer,bond_expect_df,tag,mkcode):
       bond_expect_selected_df = bond_expect_selected_df[bond_expect_selected_df['评级'].str.contains(r'^A.*?')]
       bond_expect_selected_df['代码']=bond_expect_selected_df.apply(lambda row:mkcode+row['代码'],axis=1)
       bond_expect_selected_df.to_excel(writer, optimaltag)
-      return bond_expect_selected_df[['代码','转债名称','剩余规模','含息价']]
+      return bond_expect_selected_df[['代码','转债名称','剩余规模','含息价','剩余年限']]
     except Exception as result:
        print(result)
-       bond_interest_df = pd.DataFrame(columns=['代码', '转债名称','剩余规模','含息价'])
+       bond_interest_df = pd.DataFrame(columns=['代码', '转债名称','剩余规模','含息价','剩余年限'])
        return bond_interest_df
 
 def select_kgood_some(writer,bond_expect_df,tag):
@@ -110,10 +110,10 @@ def select_kgood_some(writer,bond_expect_df,tag):
       bond_expect_kgood_df = bond_expect_kgood_df.sort_values('估值距离', ascending=True)
       bond_expect_kgood_df.to_excel(writer, tag)
       bond_expect_kgood_df['代码'] = bond_expect_kgood_df.apply(lambda row: calc_new_code(row['代码']), axis=1)
-      return bond_expect_kgood_df[['代码','转债名称','剩余规模','含息价']]
+      return bond_expect_kgood_df[['代码','转债名称','剩余规模','含息价','剩余年限']]
     except Exception as result:
       print(result)
-      bond_expect_kgood_df = pd.DataFrame(columns=['代码', '转债名称','剩余规模','含息价'])
+      bond_expect_kgood_df = pd.DataFrame(columns=['代码', '转债名称','剩余规模','含息价','剩余年限'])
       return bond_expect_kgood_df
 
 def select_bank_some(writer,bond_expect_df,tag):
