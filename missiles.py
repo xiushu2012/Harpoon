@@ -81,8 +81,14 @@ def getkellybEx(value,v0,v100):
 def getkellybKx(value,expval,ltyear):
 	# 赔率=获胜时的盈利/失败时的亏损(利息的损失)
 	# 利息损失 = (value*(1+大额存单利率)**2 -value) - (value*(1+到期利率)**2 - value)
-	kellyb = (150-value)/(value*(1+0.03)**ltyear - expval)
-	print("kellyb:%f" % (kellyb))
+	deficit = value*(1+0.03)**ltyear - expval
+	kellyb = 0.01
+	if deficit <= 0:
+		kellyb = (150-value)/1
+	else:
+		kellyb = (150-value)/deficit
+
+	#print("kellyb:%f" % (kellyb))
 	return kellyb
 
 
@@ -241,6 +247,17 @@ def select_interest_some(writer,bond_expect_df,tag):
 		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 2.0) & (bond_expect_df['下注比例'] >= 0.1) & (bond_expect_df['交易周期'] >= 1)]
 		bond_expect_selected_df = bond_expect_selected_df.sort_values('保底涨幅', ascending=False)
 		bond_expect_selected_df.to_excel(writer, optimaltag)
+		
+def get_price_kelly(value,expval,ltyear,delta,price):
+		dvalue = value*(1-delta)
+		dname = "价格%.3f" % (dvalue)
+		dkellyb = getkellybKx(dvalue,expval,ltyear)
+		dwincounts = price[ price > dvalue ].count()
+		dkellyp = dwincounts / counts
+		dkellyf = ((dkellyb+1)*dkellyp-1)/dkellyb
+		print("预计价格%f,预计下注%f,胜率%f,赔率%f" % (dvalue,dkellyf,dkellyp,dkellyb))
+		return dname,dkellyf
+
 
 if __name__=='__main__':
 		from sys import argv
@@ -257,19 +274,15 @@ if __name__=='__main__':
 			
 			interestpath = argv[1]
 			isExist = os.path.exists(interestpath)
-			if not isExist:
+			if not isExist or 'braised' not in interestpath:
 				print("please make sure the path:" + interestpath)
 				exit(1)
 		else:
 			print("please run like 'python cartridge.py [file] [2022-08-22]'")
 			exit(1)
-		
-		KellyTypeB = True
-		if 'braised.xlsx' in interestpath:
-			KellyTypeB = False
-			
+
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
-		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例', '当前价格','保底涨幅','保底价格','异动涨幅','异动价格','75涨幅','00分位', '50分位', '100分位' ,'剩余规模','交易周期','年均异动','最后异动','异动阈值'])
+		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例','跌幅1点','跌幅2点','跌幅3点','当前价格','保底涨幅','保底价格','异动涨幅','异动价格','75涨幅','剩余规模','交易周期','年均异动','最后异动','异动阈值'])
 		money = 'money'
 		ratio = 'ratio'
 		for i, bondrow in bond_interest_df.iterrows():
@@ -316,11 +329,11 @@ if __name__=='__main__':
 				print("guess abnormal counts:%f,guess abnormal avg:%f" % (cntguess,valguess)) 
 				
 				#赔率2=各次异动条件下最大盈利中位数/失败时的最大亏损
-				abnval = valguess
-				#kellyb1= getkellybEx(value,valuemin,abnval)  
-				kellyb1 = getkellybEx(value,valuemin,abnval) if KellyTypeB else getkellybKx(value,expval,ltyear)
+
+				kellyb = getkellybKx(value,expval,ltyear)
+				
+				abnval = valguess;abnormalcount = cntguess
 				print("abnormalhighmiddle:%f" % abnval)
-				abnormalcount = cntguess
 				#print("abnormalcount:%d" % abnormalcount)
 				
 				#250个交易日
@@ -333,20 +346,27 @@ if __name__=='__main__':
 				continue
 
 			#下注比例
-			kellyf1 = ((kellyb1+1)*kellyp-1)/kellyb1
-			print("########胜率:%f,赔率:%f,下注比例:%f########" %(kellyp,kellyb1,kellyf1))
+			kellyf = ((kellyb+1)*kellyp-1)/kellyb
+			print("########胜率:%f,赔率:%f,下注比例:%f########" %(kellyp,kellyb,kellyf))
 			
 			exppercent = 100*(expval-value)/value
 			abnpercent = 100*(abnval-value)/value
 			
-			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,
-			'当前价格':value,'保底涨幅':exppercent,'保底价格':expval,'异动涨幅':abnpercent,'异动价格':abnval,'75涨幅':inc75,'00分位':valuemin,'50分位':value50,'100分位':valuemax,
+			
+
+			valname01,kellyf01 = get_price_kelly(value,expval,ltyear,0.01,price)
+			valname02,kellyf02 = get_price_kelly(value,expval,ltyear,0.02,price)
+			valname03,kellyf03 = get_price_kelly(value,expval,ltyear,0.03,price)
+
+			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb,
+			'下注比例':kellyf,'跌幅1点':kellyf01,'跌幅2点':kellyf02,'跌幅3点':kellyf03,
+			'当前价格':value,'保底涨幅':exppercent,'保底价格':expval,'异动涨幅':abnpercent,'异动价格':abnval,'75涨幅':inc75,
 			'剩余规模':remain,'交易周期':tradeyears,'年均异动':abnormalperyear,'最后异动':abnormallatest,'异动阈值':abnormalminvol},ignore_index=True)
 
 
 		#print(bond_kelly_df)
 
-		fileout = today + '_kelly.xlsx'
+		fileout = today + '_kelly_missiles.xlsx'
 		outanalypath = "%s/%s" % ('bond', fileout)
 		writer = pd.ExcelWriter(outanalypath)
 		#bond_kelly_df.to_excel(writer, 'kelly')
