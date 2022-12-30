@@ -14,17 +14,17 @@ import warnings
 from pandas.core.common import SettingWithCopyWarning
 
 def get_akshare_daily(stock,end):
-	xlsfile =  "./bond/primary/%s.xlsx" % (bond)
-	
+	xlsfile =  "./bond/primary/%s_trade.xlsx" % (stock)
 	datefolder = r'./bond/' + end
+	outfile = "./%s/%s_trade.xlsx" % (datefolder,stock)
+	shname='trade'
+	
 	folderExist = os.path.exists(datefolder)
 	if not folderExist:
 			os.makedirs(datefolder)
 			print("daily:%s create" % (datefolder))
 	else:
 			print("daily:%s exist" % (datefolder))
-	outfile = "./%s/%s.xlsx" % (datefolder,bond)
-	shname='daily'
 	
 	isExist = os.path.exists(xlsfile)
 	#dateend = end
@@ -50,43 +50,52 @@ def get_akshare_daily(stock,end):
 		print("xfsfile:%s create" % (outfile))
 	return outfile,shname
 
-def getkellyb(value,v0,v25,v50,v75):
-	# 赔率=获胜时的盈利/失败时的亏损
-	kellyb1 = 0.01
-	kellyb2 = 0.01
-	if value <= v0:
-		kellyb1 = (v50 - value) / (value - 1)
-		kellyb2 = (v75 - value) / (value - 1)
-	elif value > v0  and  value <= v50:
-		kellyb1 = (v50 - value) / (value - v0)
-		kellyb2 = (v75 - value) / (value - v0)
+def get_akshare_valanaly(stock,end):
+	xlsfile =  "./bond/primary/%s_valanaly.xlsx" % (stock)
+	datefolder = r'./bond/' + end
+	outfile = "./%s/%s_valanaly.xlsx" % (datefolder,stock)
+	shname='valanaly'
+	
+	folderExist = os.path.exists(datefolder)
+	if not folderExist:
+			os.makedirs(datefolder)
+			print("daily:%s create" % (datefolder))
 	else:
-		kellyb1 = 0.01
-		kellyb2 = 0.01
-	print("valule0,value25,value50,value75:", v0,v25,v50,v75)
-	return kellyb1,kellyb2
+			print("daily:%s exist" % (datefolder))
 
-def getkellybEx(value,v0,v100):
-	# 赔率=获胜时的盈利/失败时的亏损
-	kellyb = 0.01
-	if value <= v0:
-		kellyb = (v100 - value) / (value - 1)
-	elif value >= v100:
-		kellyb = (value - 1) / (value - v0)
+	
+	isExist = os.path.exists(xlsfile)
+	#dateend = end
+	dateend = datetime.datetime.strptime(end,'%Y-%m-%d').strftime("%Y-%m-%d %H:%M:%S")
+	
+	if not isExist:
+		bond_zh_cov_value_analysis_df = ak.bond_zh_cov_value_analysis(symbol=stock)
+		bond_zh_cov_value_analysis_df.to_excel(xlsfile,sheet_name=shname)
+		print("xfsfile:%s create" % (xlsfile))
+		bond_zh_cov_value_analysis_df = pd.read_excel(xlsfile, sheet_name=shname,index_col=0,converters={'日期': str})
+		bond_zh_cov_value_analysis_df = bond_zh_cov_value_analysis_df[ bond_zh_cov_value_analysis_df['日期'] <= dateend ]
+		if bond_zh_cov_value_analysis_df.empty:
+			raise ValueError('no data before ' + end)
+		bond_zh_cov_value_analysis_df.to_excel(outfile,sheet_name=shname)
+		print("xfsfile:%s create" % (outfile))  
 	else:
-		kellyb = (v100 - value) / (value - v0)
-	print("kellyv0:%f,kellyv100:%f" % (v0,v100))
-	return kellyb
+		bond_zh_cov_value_analysis_df = pd.read_excel(xlsfile, sheet_name=shname,index_col=0,converters={'日期': str})
+		bond_zh_cov_value_analysis_df = bond_zh_cov_value_analysis_df[ bond_zh_cov_value_analysis_df['日期'] <= dateend ]
+		if bond_zh_cov_value_analysis_df.empty:
+			raise ValueError('no data before ' + end)
+		bond_zh_cov_value_analysis_df.to_excel(outfile,sheet_name=shname)
+		print("xfsfile:%s create" % (outfile))
+	return outfile,shname
 
-def getkellybKx(value,expval,ltyear):
+def getkellybEx(value,expval,maxval,ltyear):
 	# 赔率=获胜时的盈利/失败时的亏损(利息的损失)
 	# 利息损失 = (value*(1+大额存单利率)**2 -value) - (value*(1+到期利率)**2 - value)
 	deficit = value*(1+0.03)**ltyear - expval
 	kellyb = 0.01
-	if deficit <= 0:
-		kellyb = (150-value)/1
+	if deficit <= 1:
+		kellyb = (maxval-value)/1
 	else:
-		kellyb = (150-value)/deficit
+		kellyb = (maxval-value)/deficit
 
 	#print("kellyb:%f" % (kellyb))
 	return kellyb
@@ -98,11 +107,6 @@ def cal_close_inc(volume_df,close):
 				return r[mvcolumn]
 	return 0
 
-def get_dailyinc_df(path,name,ratio):
-	bond_cov_dailyinc_df = pd.read_excel(path, name)[['date', 'open','high']]
-	bond_cov_dailyinc_df[ratio] = bond_cov_dailyinc_df.apply(lambda row: (row['high']-row['open'])/row['open'], axis=1)
-	bond_cov_biginc_df = bond_cov_dailyinc_df[ bond_cov_dailyinc_df[ratio] > 0.03]
-	return bond_cov_biginc_df
 
 def get_abnormal_dbscan_df(path,name):
 	bond_cov_volume_df = pd.read_excel(path, name)[['date','open','high','low','close','volume']]
@@ -215,29 +219,34 @@ def get_abnormal_standard_df(path,name):
 
 
 def get_daily_df(path,name,price):
-	newcolumn = price
 	bond_cov_daily_df_open = pd.read_excel(path, name)[['date', 'open']]
 	lenopen = len(bond_cov_daily_df_open);
 	bond_cov_daily_df_open.index = range(0, lenopen)
-	bond_cov_daily_df_open = bond_cov_daily_df_open.rename(columns={'open':newcolumn})
+	bond_cov_daily_df_open = bond_cov_daily_df_open.rename(columns={'open':price})
 
 	bond_cov_daily_df_low = pd.read_excel(path, name)[['date', 'low']]
 	lenlow = len(bond_cov_daily_df_low);
 	bond_cov_daily_df_low.index = range(lenopen, lenopen + lenlow)
-	bond_cov_daily_df_low = bond_cov_daily_df_low.rename(columns={'low': newcolumn})
+	bond_cov_daily_df_low = bond_cov_daily_df_low.rename(columns={'low': price})
 
 	bond_cov_daily_df_high = pd.read_excel(path, name)[['date', 'high']]
 	lenhigh = len(bond_cov_daily_df_high);
 	bond_cov_daily_df_high.index = range(lenopen + lenlow, lenopen + lenlow + lenhigh)
-	bond_cov_daily_df_high = bond_cov_daily_df_high.rename(columns={'high': newcolumn})
+	bond_cov_daily_df_high = bond_cov_daily_df_high.rename(columns={'high': price})
 
 	bond_cov_daily_df_close = pd.read_excel(path, name)[['date', 'close']]
 	lenclose = len(bond_cov_daily_df_close);
 	bond_cov_daily_df_close.index = range(lenopen + lenlow + lenhigh, lenopen + lenlow + lenhigh + lenclose)
-	bond_cov_daily_df_close = bond_cov_daily_df_close.rename(columns={'close': newcolumn})
+	bond_cov_daily_df_close = bond_cov_daily_df_close.rename(columns={'close': price})
 
 	bond_cov_daily_df = pd.concat([bond_cov_daily_df_open, bond_cov_daily_df_low, bond_cov_daily_df_high, bond_cov_daily_df_close])
 	return bond_cov_daily_df
+	
+def get_valanaly_df(path,name,distance):
+	bond_cov_valanaly_df = pd.read_excel(path, name)
+	va,vb = calc_value_center()
+	bond_cov_valanaly_df[distance] = bond_cov_valanaly_df.apply(lambda row: calc_value_distance(row['纯债溢价率'], row['转股溢价率'],va,vb), axis=1)
+	return bond_cov_valanaly_df
 
 
 def select_interest_some(writer,bond_expect_df,tag):
@@ -247,17 +256,13 @@ def select_interest_some(writer,bond_expect_df,tag):
 		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 2.0) & (bond_expect_df['下注比例'] >= 0.1) & (bond_expect_df['交易周期'] >= 1)]
 		bond_expect_selected_df = bond_expect_selected_df.sort_values('保底涨幅', ascending=False)
 		bond_expect_selected_df.to_excel(writer, optimaltag)
-		
-def get_price_kelly(value,expval,ltyear,delta,price):
-		dvalue = value*(1-delta)
-		dname = "价格%.3f" % (dvalue)
-		dkellyb = getkellybKx(dvalue,expval,ltyear)
-		dwincounts = price[ price > dvalue ].count()
-		dkellyp = dwincounts / counts
-		dkellyf = ((dkellyb+1)*dkellyp-1)/dkellyb
-		print("预计价格%f,预计下注%f,胜率%f,赔率%f" % (dvalue,dkellyf,dkellyp,dkellyb))
-		return dname,dkellyf
 
+def calc_value_center():
+	stock_premium = [0.81,0,-0.1,-5.56,-3,8.34,0.28,-5.2,-8.24,2.34,-7.3,-26.52,-0.29]
+	debt_premium =  [-2.79,0.79,2.09,2.58,2.89,4.63,5.18,7.33,7.4,7.44,7.46,9.23,9.52]
+	return np.mean(stock_premium),np.mean(debt_premium)
+def calc_value_distance(a, b,va,vb):
+	return math.sqrt((a-va)**2+(b-vb)**2)
 
 if __name__=='__main__':
 		from sys import argv
@@ -282,16 +287,44 @@ if __name__=='__main__':
 			exit(1)
 
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
-		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例','跌幅1点','跌幅2点','跌幅3点','当前价格','保底涨幅','保底价格','异动涨幅','异动价格','75涨幅','剩余规模','交易周期','年均异动','最后异动','异动阈值'])
+		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例','估值距离','当前价格','保底涨幅','保底价格','异动涨幅','异动价格','剩余规模','交易周期','年均异动','最后异动','异动阈值'])
 		money = 'money'
-		ratio = 'ratio'
+		distance = 'distance'
 		for i, bondrow in bond_interest_df.iterrows():
 			name = bondrow['name'];
 			bond = bondrow['code'];
 			remain= bondrow['remain'];
 			expval= bondrow['expval'];
-			ltyear = bondrow['lastyear'];
+			tradeyear = 6-bondrow['lastyear'];
 			print('#########################名称:%s########################' % name)
+
+
+			try:
+				#the bond like '113546' not 'sh113546'
+				numbond = bond[2:]
+				valuepath,valuesheet = get_akshare_valanaly(numbond,today)
+			except Exception as result:
+				print(bond + " get bond error:" + str(result))
+				continue
+			print("get datapath ok:" + valuepath + ",sheetname:" +valuesheet)
+
+			bond_cov_valanaly_df = get_valanaly_df(valuepath, valuesheet,distance)
+			#print(bond_cov_valanaly_df)
+			totalcounts =  bond_cov_valanaly_df.shape[0]
+			distancetval = bond_cov_valanaly_df.loc[totalcounts-1][distance]
+			datevalue  = bond_cov_valanaly_df.loc[totalcounts-1]['日期']
+			pricevalue = bond_cov_valanaly_df.loc[totalcounts-1]['收盘价']
+			wincounts = (bond_cov_valanaly_df[ bond_cov_valanaly_df[distance] > distancetval ]).shape[0]
+			print("totalcounts,wincounts,distancetval,datevalue :",totalcounts,wincounts,distancetval,datevalue)
+			#胜率=成功总次数/(成功总次数+失败总次数)
+			kellyp = wincounts / totalcounts
+			#赔率=赎回时的盈利/失败时的最大亏损
+			kellyb = getkellybEx(pricevalue,expval,150,6-tradeyear)
+			
+			#下注比例
+			kellyf = ((kellyb+1)*kellyp-1)/kellyb
+			print("########胜率:%f,赔率:%f,下注比例:%f########" %(kellyp,kellyb,kellyf))
+
 			try:
 				resultpath,insheetname = get_akshare_daily(bond,today)
 			except Exception as result:
@@ -299,45 +332,18 @@ if __name__=='__main__':
 				continue
 			print("get datapath ok:" + resultpath + ",sheetname:" +insheetname)
 
-
-			bond_cov_daily_df = get_daily_df(resultpath, insheetname, money)
-			dailysta = bond_cov_daily_df[money].describe()
-			bond_cov_biginc_df = get_dailyinc_df(resultpath, insheetname,ratio)
-			incsta = bond_cov_biginc_df[ratio].describe()
-			inc75 = incsta['75%']
-
-			counts = dailysta['count']
-			tradeyears  =  counts/4/250
-
-			date = bond_cov_daily_df.loc[counts-1][0]
-			value = bond_cov_daily_df.loc[counts-1][1]
-
-			valuemin = dailysta['min'];valuemax = dailysta['max']
-			value25 = dailysta['25%'];value50 = dailysta['50%'];value75 = dailysta['75%']
-
-			price =  bond_cov_daily_df[money]
-			wincounts = price[ price > value ].count()
-			#成功总次数/(成功总次数+失败总次数)
-			kellyp = wincounts / counts
-
-
-
 			#异动指标
 			try:
 				bond_cov_abnormal_df = get_abnormal_dbscan_df(resultpath,insheetname)
 				cntguess,valguess= guess_abnormal_parameter(bond_cov_abnormal_df)
 				print("guess abnormal counts:%f,guess abnormal avg:%f" % (cntguess,valguess)) 
 				
-				#赔率2=各次异动条件下最大盈利中位数/失败时的最大亏损
-
-				kellyb = getkellybKx(value,expval,ltyear)
-				
 				abnval = valguess;abnormalcount = cntguess
 				print("abnormalhighmiddle:%f" % abnval)
 				#print("abnormalcount:%d" % abnormalcount)
 				
 				#250个交易日
-				abnormalperyear = abnormalcount/tradeyears
+				abnormalperyear = abnormalcount/tradeyear
 				abnormallatest = bond_cov_abnormal_df.iloc[-1][0]
 				abnormalminvol = np.min(bond_cov_abnormal_df['volume'])
 				#print("--->"+str(abnormalminvol))
@@ -345,23 +351,11 @@ if __name__=='__main__':
 				print("get abnormal error:" + bond)
 				continue
 
-			#下注比例
-			kellyf = ((kellyb+1)*kellyp-1)/kellyb
-			print("########胜率:%f,赔率:%f,下注比例:%f########" %(kellyp,kellyb,kellyf))
-			
-			exppercent = 100*(expval-value)/value
-			abnpercent = 100*(abnval-value)/value
-			
-			
-
-			valname01,kellyf01 = get_price_kelly(value,expval,ltyear,0.01,price)
-			valname02,kellyf02 = get_price_kelly(value,expval,ltyear,0.02,price)
-			valname03,kellyf03 = get_price_kelly(value,expval,ltyear,0.03,price)
-
-			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb,
-			'下注比例':kellyf,'跌幅1点':kellyf01,'跌幅2点':kellyf02,'跌幅3点':kellyf03,
-			'当前价格':value,'保底涨幅':exppercent,'保底价格':expval,'异动涨幅':abnpercent,'异动价格':abnval,'75涨幅':inc75,
-			'剩余规模':remain,'交易周期':tradeyears,'年均异动':abnormalperyear,'最后异动':abnormallatest,'异动阈值':abnormalminvol},ignore_index=True)
+			exppercent = 100*(expval-pricevalue)/pricevalue
+			abnpercent = 100*(abnval-pricevalue)/pricevalue
+			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb,'下注比例':kellyf,
+			'估值距离':distancetval,'当前价格':pricevalue,'保底涨幅':exppercent,'保底价格':expval,'异动涨幅':abnpercent,'异动价格':abnval,
+			'剩余规模':remain,'交易周期':tradeyear,'年均异动':abnormalperyear,'最后异动':abnormallatest,'异动阈值':abnormalminvol},ignore_index=True)
 
 
 		#print(bond_kelly_df)
