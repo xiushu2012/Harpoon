@@ -246,6 +246,10 @@ def get_valanaly_df(path,name,distance):
 	bond_cov_valanaly_df = pd.read_excel(path, name)
 	va,vb = calc_value_center()
 	bond_cov_valanaly_df[distance] = bond_cov_valanaly_df.apply(lambda row: calc_value_distance(row['纯债溢价率'], row['转股溢价率'],va,vb), axis=1)
+	bond_cov_valanaly_df = bond_cov_valanaly_df[['日期','收盘价','纯债价值','转股价值','纯债溢价率','转股溢价率',distance]]
+
+	with pd.ExcelWriter(path,engine='openpyxl',mode='a',if_sheet_exists='replace') as writer:
+			bond_cov_valanaly_df.to_excel(writer, name,index=False)
 	return bond_cov_valanaly_df
 
 
@@ -289,7 +293,7 @@ if __name__=='__main__':
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
 		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例','估值距离','当前价格','保底涨幅','保底价格','异动涨幅','异动价格','剩余规模','交易周期','年均异动','最后异动','异动阈值'])
 		money = 'money'
-		distance = 'distance'
+		distance = '估值距离'
 		for i, bondrow in bond_interest_df.iterrows():
 			name = bondrow['name'];
 			bond = bondrow['code'];
