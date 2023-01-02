@@ -284,7 +284,7 @@ if __name__=='__main__':
 		
 			
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
-		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例', '当前价格','保底涨幅','保底价格','异动涨幅','异动价格','00分位', '50分位', '100分位' ,'剩余规模','交易周期','年均异动','最后异动','异动阈值'])
+		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例','纯债溢价率','当前价格','保底涨幅','保底价格','异动涨幅','异动价格','00分位', '50分位', '100分位' ,'剩余规模','交易周期','年均异动','最后异动','异动阈值'])
 		money = 'money'
 		ratio = 'ratio'
 		for i, bondrow in bond_interest_df.iterrows():
@@ -356,7 +356,7 @@ if __name__=='__main__':
 			exppercent = 100*(expval-pricevalue)/pricevalue
 			abnpercent = 100*(abnval-pricevalue)/pricevalue
 			
-			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,
+			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb1,'下注比例':kellyf1,'纯债溢价率':prerate,
 			'当前价格':pricevalue,'保底涨幅':exppercent,'保底价格':expval,'异动涨幅':abnpercent,'异动价格':abnval,'00分位':valuemin,'50分位':value50,'100分位':valuemax,
 			'剩余规模':remain,'交易周期':tradeyear,'年均异动':abnormalperyear,'最后异动':abnormallatest,'异动阈值':abnormalminvol},ignore_index=True)
 
