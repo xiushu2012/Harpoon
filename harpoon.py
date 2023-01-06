@@ -85,33 +85,14 @@ def get_pass_days(date):
 		delt = datetime.datetime.now() - datetime.datetime.strptime(date, '%Y%m%d')
 		return delt.days
 
-def select_interest_some(writer,bond_expect_df,tag,mkcode):
-    try:
-      bond_expect_df.to_excel(writer, tag)
-      optimaltag = 'opt-'+ tag;
-      bond_expect_selected_df = bond_expect_df[(bond_expect_df['到期税前收益'] > 0)
-                                             &  (bond_expect_df['剩余规模'] <= 5.0) 
-                                             & (bond_expect_df['现价'] <= 120.0) 
-                                             & (bond_expect_df['剩余年限'] <= 5)
-                                             & (bond_expect_df['剩余年限'] >= 2)]
-      bond_expect_selected_df = bond_expect_selected_df.sort_values('纯债溢价率', ascending=True)
-      bond_expect_selected_df = bond_expect_selected_df[bond_expect_selected_df['评级'].str.contains(r'^A.*?')]
-      bond_expect_selected_df['代码']=bond_expect_selected_df.apply(lambda row:mkcode+row['代码'],axis=1)
-      bond_expect_selected_df.to_excel(writer, optimaltag)
-      return bond_expect_selected_df[['代码','转债名称','剩余规模','含息价','剩余年限']]
-    except Exception as result:
-       print(result)
-       bond_interest_df = pd.DataFrame(columns=['代码', '转债名称','剩余规模','含息价','剩余年限'])
-       return bond_interest_df
-
 def select_kgood_some(writer,bond_expect_df,tag):
     try:
-      bond_expect_kgood_df = bond_expect_df[(bond_expect_df['估值距离'] <= 50) 
-                                            & (bond_expect_df['剩余规模'] <= 5.0) 
-                                            & (bond_expect_df['现价'] <= 120.0) 
+      bond_expect_kgood_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 5.0) 
+                                            & (bond_expect_df['现价'] <= 121.0) 
                                             & (bond_expect_df['剩余年限'] <= 5) 
                                             & (bond_expect_df['剩余年限'] >= 2)]
-      bond_expect_kgood_df = bond_expect_kgood_df.sort_values('估值距离', ascending=True)
+      bond_expect_kgood_df = bond_expect_kgood_df.sort_values('到期税前收益', ascending=False)
+      bond_expect_kgood_df = bond_expect_kgood_df[bond_expect_kgood_df['评级'].str.contains(r'^A.*?')]
       bond_expect_kgood_df.to_excel(writer, tag)
       bond_expect_kgood_df['代码'] = bond_expect_kgood_df.apply(lambda row: calc_new_code(row['代码']), axis=1)
       return bond_expect_kgood_df[['代码','转债名称','剩余规模','含息价','剩余年限']]
@@ -134,10 +115,10 @@ if __name__=='__main__':
         if argv[1] == '*':
             tnow = datetime.datetime.now()
         else:
-            tnow = datetime.datetime.strptime(argv[1], '%Y/%m/%d')
+            tnow = datetime.datetime.strptime(argv[1], '%Y-%m-%d')
         cookie = argv[2]
     else:
-        print("please run like 'python harpoon.py [*|2020/07/07 cookie]'")
+        print("please run like 'python harpoon.py [*|2020-07-07 cookie]'")
         print("1.F12或者单击鼠标右键，选择审查元素")
         print("2.点击Console,输入指令 document.cookie,回车即可显示当前页面cookie信息")
         exit(1)
@@ -175,41 +156,22 @@ if __name__=='__main__':
 
     bond_cov_jsl_df['估值距离'] = bond_cov_jsl_df.apply(lambda row: calc_value_distance(row['转股溢价率'], row['纯债溢价率'],va,vb), axis=1)
     
-    
-    
+
     #bond_expect_sort_df = bond_cov_jsl_df.sort_values('估值距离',ascending=True)
     bond_expect_sort_df = bond_cov_jsl_df.sort_values('剩余规模', ascending=True)
     bond_expect_sort_df = bond_expect_sort_df[['代码','转债名称','正股名称','到期税前收益','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','现价','含息价','剩余规模','评级','剩余年限']]
 
-    bond_expect_startup_df = bond_expect_sort_df[bond_expect_sort_df['代码'].str.contains(r'^123.*?')]
-    bond_expect_middlesmall_df = bond_expect_sort_df[bond_expect_sort_df['代码'].str.contains(r'^(127|128).*?')]
-    bond_expect_bigboard_df = bond_expect_sort_df[bond_expect_sort_df['代码'].str.contains(r'^(110|113).*?')]
-    bond_expect_scitech_df = bond_expect_sort_df[bond_expect_sort_df['代码'].str.contains(r'^118.*?')]
-    bond_expect_bank_df = bond_expect_sort_df[bond_expect_sort_df['正股名称'].str.contains(r'.*银行.*?')]
 
     fileout = tnow.strftime('%Y_%m_%d') + '_out.xlsx'
     outanalypath =  "%s/%s" % (filefolder,fileout)
     writer = pd.ExcelWriter(outanalypath)
-    
-    
     bond_expect_sort_df.to_excel(writer,'analyze')
-    select_bank_some(writer, bond_expect_bank_df, 'bank')
     
     bond_kgood_df = select_kgood_some(writer, bond_expect_sort_df, 'kgood')
-    bond_kgood_df.to_excel(writer,'braised')
-    
-    startup_df = select_interest_some(writer, bond_expect_startup_df, 'startup','sz')
-    middlesmall_df = select_interest_some(writer, bond_expect_middlesmall_df, 'middlesmall','sz')
-    bigboard_df = select_interest_some(writer, bond_expect_bigboard_df, 'bigboard','sh')
-    scitech_df = select_interest_some(writer, bond_expect_scitech_df, 'scitech','sh')
-
-    #bond_interest_df = pd.DataFrame(columns=['code', 'name'])
-    bond_interest_df = pd.concat([startup_df,middlesmall_df,bigboard_df,scitech_df])
-    bond_interest_df.to_excel(writer,'selected')
+    bond_kgood_df.to_excel(writer,'selected')
 
     writer.save()
     print("value distance of  'unlist and analye' :" + fileout)
-
 
     #print(bond_expect_sort_df)
     # 显示散点图

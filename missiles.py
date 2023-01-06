@@ -257,7 +257,7 @@ def select_interest_some(writer,bond_expect_df,tag):
 		bond_expect_df = bond_expect_df.sort_values('下注比例', ascending=False)
 		bond_expect_df.to_excel(writer, tag)
 		optimaltag = 'opt-'+ tag;
-		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 2.0) & (bond_expect_df['下注比例'] >= 0.1) & (bond_expect_df['交易周期'] >= 1)]
+		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 2.0) & (bond_expect_df['下注比例'] >= 0.5) & (bond_expect_df['交易周期'] >= 1)]
 		bond_expect_selected_df = bond_expect_selected_df.sort_values('保底涨幅', ascending=False)
 		bond_expect_selected_df.to_excel(writer, optimaltag)
 
@@ -283,7 +283,7 @@ if __name__=='__main__':
 			
 			interestpath = argv[1]
 			isExist = os.path.exists(interestpath)
-			if not isExist or 'braised' not in interestpath:
+			if not isExist or 'selected' not in interestpath:
 				print("please make sure the path:" + interestpath)
 				exit(1)
 		else:
