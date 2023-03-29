@@ -92,7 +92,7 @@ def select_kgood_some(writer,bond_expect_df,tag):
                                             & (bond_expect_df['剩余年限'] <= 5) 
                                             & (bond_expect_df['剩余年限'] >= 2)]
       bond_expect_kgood_df = bond_expect_kgood_df.sort_values('到期税前收益', ascending=False)
-      bond_expect_kgood_df = bond_expect_kgood_df[bond_expect_kgood_df['评级'].str.contains(r'^A.*?')]
+      bond_expect_kgood_df = bond_expect_kgood_df[bond_expect_kgood_df['债券评级'].str.contains(r'^A.*?')]
       bond_expect_kgood_df.to_excel(writer, tag)
       bond_expect_kgood_df['代码'] = bond_expect_kgood_df.apply(lambda row: calc_new_code(row['代码']), axis=1)
       return bond_expect_kgood_df[['代码','转债名称','剩余规模','含息价','剩余年限']]
@@ -145,8 +145,8 @@ if __name__=='__main__':
 
 
     #bond_cov_jsl_df = pd.read_excel(resultpath, insheetname,converters={'pre_bond_id':str})[['bond_nm', 'stock_cd','curr_iss_amt','rating_cd','guarantor','price','year_left','ytm_rt','convert_value','premium_rt','force_redeem','convert_cd_tip','adj_cnt','adj_scnt','pre_bond_id']]
-    #bond_cov_jsl_df.rename(columns={'bond_nm': '转债名称', 'stock_cd': '正股代码','curr_iss_amt':'剩余规模','rating_cd':'评级','guarantor':'担保情况','price':'最新价','year_left':'剩余期限','ytm_rt':'到期年化','convert_value':'转股价值','premium_rt':'转股溢价率','force_redeem':'强赎公告','convert_cd_tip':'转股提示','adj_cnt':'下修次数','adj_scnt':'成功次数','pre_bond_id':'转债代码'}, inplace=True)
-    bond_cov_jsl_df = pd.read_excel(resultpath, insheetname,converters={'代码':str})[['转债名称', '正股名称','剩余规模','评级','现价','剩余年限','到期税前收益','转股价值','转股溢价率','代码']]
+    #bond_cov_jsl_df.rename(columns={'bond_nm': '转债名称', 'stock_cd': '正股代码','curr_iss_amt':'剩余规模','rating_cd':'债券评级','guarantor':'担保情况','price':'最新价','year_left':'剩余期限','ytm_rt':'到期年化','convert_value':'转股价值','premium_rt':'转股溢价率','force_redeem':'强赎公告','convert_cd_tip':'转股提示','adj_cnt':'下修次数','adj_scnt':'成功次数','pre_bond_id':'转债代码'}, inplace=True)
+    bond_cov_jsl_df = pd.read_excel(resultpath, insheetname,converters={'代码':str})[['转债名称', '正股名称','剩余规模','债券评级','现价','剩余年限','到期税前收益','转股价值','转股溢价率','代码']]
 
 
     bond_cov_jsl_df['纯债价值'] = bond_cov_jsl_df.apply(lambda row: calc_bond_value(row['现价'],row['到期税前收益'],row['剩余年限']), axis=1)
@@ -159,7 +159,7 @@ if __name__=='__main__':
 
     #bond_expect_sort_df = bond_cov_jsl_df.sort_values('估值距离',ascending=True)
     bond_expect_sort_df = bond_cov_jsl_df.sort_values('剩余规模', ascending=True)
-    bond_expect_sort_df = bond_expect_sort_df[['代码','转债名称','正股名称','到期税前收益','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','现价','含息价','剩余规模','评级','剩余年限']]
+    bond_expect_sort_df = bond_expect_sort_df[['代码','转债名称','正股名称','到期税前收益','转股价值','转股溢价率','纯债价值','纯债溢价率','估值距离','现价','含息价','剩余规模','债券评级','剩余年限']]
 
 
     fileout = tnow.strftime('%Y_%m_%d') + '_out.xlsx'

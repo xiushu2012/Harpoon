@@ -11,7 +11,7 @@ import openpyxl
 from sklearn.cluster import DBSCAN
 import time
 import warnings
-from pandas.core.common import SettingWithCopyWarning
+from pandas.core.generic import SettingWithCopyWarning
 
 def get_akshare_daily(stock,end):
 	xlsfile =  "./bond/primary/%s_trade.xlsx" % (stock)
@@ -188,7 +188,8 @@ def guess_abnormal_parameter(abnormal_df):
 	for flag in typedic.keys():
 			#print(flag)
 			avg = typedic[flag][1]/typedic[flag][0]
-			type_df = type_df.append({'flag':flag,'avg':avg},ignore_index=True)
+			#type_df = type_df.append({'flag':flag,'avg':avg},ignore_index=True)
+			type_df = pd.concat([type_df,pd.DataFrame({'flag':[flag],'avg':[avg]})],ignore_index=True)
 	#print(type_df)
 	avgsta = type_df['avg'].describe()
 	return avgsta['count'],avgsta['50%']
@@ -357,9 +358,14 @@ if __name__=='__main__':
 
 			exppercent = 100*(expval-pricevalue)/pricevalue
 			abnpercent = 100*(abnval-pricevalue)/pricevalue
-			bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb,'下注比例':kellyf,
-			'估值距离':distancetval,'当前价格':pricevalue,'保底涨幅':exppercent,'保底价格':expval,'异动涨幅':abnpercent,'异动价格':abnval,
-			'剩余规模':remain,'交易周期':tradeyear,'年均异动':abnormalperyear,'最后异动':abnormallatest,'异动阈值':abnormalminvol},ignore_index=True)
+			#bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb,'下注比例':kellyf,
+			#'估值距离':distancetval,'当前价格':pricevalue,'保底涨幅':exppercent,'保底价格':expval,'异动涨幅':abnpercent,'异动价格':abnval,
+			#'剩余规模':remain,'交易周期':tradeyear,'年均异动':abnormalperyear,'最后异动':abnormallatest,'异动阈值':abnormalminvol},ignore_index=True)
+			
+			bond_kelly_df = pd.concat([bond_kelly_df,pd.DataFrame({'名称':[name],'代码':[bond],'胜率':[kellyp],'赔率':[kellyb],'下注比例':[kellyf],
+			'估值距离':[distancetval],'当前价格':[pricevalue],'保底涨幅':[exppercent],'保底价格':[expval],'异动涨幅':[abnpercent],'异动价格':[abnval],
+			'剩余规模':[remain],'交易周期':[tradeyear],'年均异动':[abnormalperyear],'最后异动':[abnormallatest],'异动阈值':[abnormalminvol]})],ignore_index=True)
+
 
 
 		#print(bond_kelly_df)
