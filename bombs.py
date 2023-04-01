@@ -373,7 +373,8 @@ if __name__=='__main__':
 		writer = pd.ExcelWriter(outanalypath)
 		#bond_kelly_df.to_excel(writer, 'kelly')
 		select_interest_some(writer, bond_kelly_df, 'kelly')
-		writer.save()
+		#writer.save()
+		writer.close()
 		print("kelly analy out path:" + outanalypath)
 
 

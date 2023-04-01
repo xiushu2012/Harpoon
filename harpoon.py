@@ -170,7 +170,8 @@ if __name__=='__main__':
     bond_kgood_df = select_kgood_some(writer, bond_expect_sort_df, 'kgood')
     bond_kgood_df.to_excel(writer,'selected')
 
-    writer.save()
+    #writer.save()
+    writer.close()
     print("value distance of  'unlist and analye' :" + fileout)
 
     #print(bond_expect_sort_df)
