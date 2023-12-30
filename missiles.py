@@ -192,7 +192,11 @@ def guess_abnormal_parameter(abnormal_df):
 			type_df = pd.concat([type_df,pd.DataFrame({'flag':[flag],'avg':[avg]})],ignore_index=True)
 	#print(type_df)
 	avgsta = type_df['avg'].describe()
-	return avgsta['count'],avgsta['50%']
+	rate = abnormal_df.apply(lambda row: 100*(row['high']-row['open'])/row['open'], axis=1)
+	ratesta = rate.describe()
+	return avgsta['count'],avgsta['50%'],ratesta['50%']
+
+
 
 
 def get_abnormal_standard_df(path,name):
@@ -292,7 +296,7 @@ if __name__=='__main__':
 			exit(1)
 
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
-		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例','估值距离','当前价格','保底涨幅','保底价格','异动涨幅','异动价格','剩余规模','交易周期','年均异动','最后异动','异动阈值'])
+		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例','估值距离','当前价格','参考估价','保底涨幅','保底价格','剩余规模','交易周期','年均异动','最后异动','异动阈值','异动涨幅'])
 		money = 'money'
 		distance = '估值距离'
 		for i, bondrow in bond_interest_df.iterrows():
@@ -340,10 +344,10 @@ if __name__=='__main__':
 			#异动指标
 			try:
 				bond_cov_abnormal_df = get_abnormal_dbscan_df(resultpath,insheetname)
-				cntguess,valguess= guess_abnormal_parameter(bond_cov_abnormal_df)
-				print("guess abnormal counts:%f,guess abnormal avg:%f" % (cntguess,valguess)) 
+				cntguess,valguess,abnrate = guess_abnormal_parameter(bond_cov_abnormal_df)
+				print("guess abnormal counts:%f,guess abnormal avg:%f,guess abnormal rate:%f" % (cntguess,valguess,abnrate)) 
 				
-				abnval = valguess;abnormalcount = cntguess
+				abnval = 150;abnormalcount = cntguess
 				print("abnormalhighmiddle:%f" % abnval)
 				#print("abnormalcount:%d" % abnormalcount)
 				
@@ -357,14 +361,10 @@ if __name__=='__main__':
 				continue
 
 			exppercent = 100*(expval-pricevalue)/pricevalue
-			abnpercent = 100*(abnval-pricevalue)/pricevalue
-			#bond_kelly_df = bond_kelly_df.append({'名称':name,'代码':bond,'胜率':kellyp,'赔率':kellyb,'下注比例':kellyf,
-			#'估值距离':distancetval,'当前价格':pricevalue,'保底涨幅':exppercent,'保底价格':expval,'异动涨幅':abnpercent,'异动价格':abnval,
-			#'剩余规模':remain,'交易周期':tradeyear,'年均异动':abnormalperyear,'最后异动':abnormallatest,'异动阈值':abnormalminvol},ignore_index=True)
 			
 			bond_kelly_df = pd.concat([bond_kelly_df,pd.DataFrame({'名称':[name],'代码':[bond],'胜率':[kellyp],'赔率':[kellyb],'下注比例':[kellyf],
-			'估值距离':[distancetval],'当前价格':[pricevalue],'保底涨幅':[exppercent],'保底价格':[expval],'异动涨幅':[abnpercent],'异动价格':[abnval],
-			'剩余规模':[remain],'交易周期':[tradeyear],'年均异动':[abnormalperyear],'最后异动':[abnormallatest],'异动阈值':[abnormalminvol]})],ignore_index=True)
+			'估值距离':[distancetval],'当前价格':[pricevalue],'参考估价':[abnval],'保底涨幅':[exppercent],'保底价格':[expval],'剩余规模':[remain],'交易周期':[tradeyear],
+			'年均异动':[abnormalperyear],'最后异动':[abnormallatest],'异动阈值':[abnormalminvol],'异动涨幅':[abnrate]})],ignore_index=True)
 
 
 
