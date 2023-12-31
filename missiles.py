@@ -158,43 +158,26 @@ def get_abnormal_dbscan_df(path,name):
 			bond_cov_abnormal_df.to_excel(writer, 'abnormal')	
 	return bond_cov_abnormal_df
 
+def guess_abnormal_parameter_additional(abnormal_df,tradeyear):
 
-def guess_abnormal_parameter(abnormal_df):
+	element_counts = abnormal_df['type'].value_counts()
+	#print(element_counts)
 
-	#strts0 = abnormal_df['date'].tolist()[0]
-	#print('classify ' + strts0)
-	#ts0 = time.mktime(time.strptime(str(strts0),"%Y-%m-%d %H:%M:%S"))  row['date']
-	typedic = {}
-	abnormal_high_df=abnormal_df[['high','type']]
-	transtype = 0
-	for i, abnrow in abnormal_high_df.iterrows():
-			high = abnrow['high'];type = abnrow['type'];
-			if type == -1:
-				transtype = transtype - 1
-				type = transtype
-			
-			if type in typedic.keys():
-				typedic[type][0] =  typedic[type][0] + 1
-				typedic[type][1] =  typedic[type][1] + high
-			else:
-				value=[]
-				value.append(1);
-				value.append(high)
-				typedic[type]=value
+	oneshotcount = 0
+	totalcount   = 0
+	if -1 in element_counts:
+		oneshotcount = element_counts[-1]
+		totalcount = len(element_counts)- 1 + oneshotcount
+	else:
+		totalcount = len(element_counts)
 
-	#print(typedic)
+	abnperyear = totalcount/tradeyear
 	
-	type_df = pd.DataFrame(columns=['flag', 'avg'])
-	for flag in typedic.keys():
-			#print(flag)
-			avg = typedic[flag][1]/typedic[flag][0]
-			#type_df = type_df.append({'flag':flag,'avg':avg},ignore_index=True)
-			type_df = pd.concat([type_df,pd.DataFrame({'flag':[flag],'avg':[avg]})],ignore_index=True)
-	#print(type_df)
-	avgsta = type_df['avg'].describe()
+	#假设每年只取一次波动，那么该异动涨幅应该位于所有波动的前1/abnperyear分位
 	rate = abnormal_df.apply(lambda row: 100*(row['high']-row['open'])/row['open'], axis=1)
-	ratesta = rate.describe()
-	return avgsta['count'],avgsta['50%'],ratesta['50%']
+	abnrate = rate.quantile(1-1/abnperyear)
+	
+	return abnperyear,abnrate
 
 
 
@@ -344,15 +327,12 @@ if __name__=='__main__':
 			#异动指标
 			try:
 				bond_cov_abnormal_df = get_abnormal_dbscan_df(resultpath,insheetname)
-				cntguess,valguess,abnrate = guess_abnormal_parameter(bond_cov_abnormal_df)
-				print("guess abnormal counts:%f,guess abnormal avg:%f,guess abnormal rate:%f" % (cntguess,valguess,abnrate)) 
-				
-				abnval = 150;abnormalcount = cntguess
-				print("abnormalhighmiddle:%f" % abnval)
-				#print("abnormalcount:%d" % abnormalcount)
-				
+				cntguess,abnrate = guess_abnormal_parameter_additional(bond_cov_abnormal_df,tradeyear)
+				print("guess abnormal counts per year:%f,guess abnormal rate per year:%f" % (cntguess,abnrate)) 
+			
+				abnval = 150
 				#250个交易日
-				abnormalperyear = abnormalcount/tradeyear
+				abnormalperyear = cntguess
 				abnormallatest = bond_cov_abnormal_df.iloc[-1][0]
 				abnormalminvol = np.min(bond_cov_abnormal_df['volume'])
 				#print("--->"+str(abnormalminvol))
