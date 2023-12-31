@@ -90,7 +90,7 @@ def select_kgood_some(writer,bond_expect_df,tag):
       bond_expect_kgood_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 5.0) 
                                             & (bond_expect_df['现价'] <= 121.0) 
                                             & (bond_expect_df['剩余年限'] <= 5) 
-                                            & (bond_expect_df['剩余年限'] >= 2)]
+                                            & (bond_expect_df['剩余年限'] >= 1.5)]
       bond_expect_kgood_df = bond_expect_kgood_df.sort_values('到期税前收益', ascending=False)
       bond_expect_kgood_df = bond_expect_kgood_df[bond_expect_kgood_df['债券评级'].str.contains(r'^A.*?')]
       bond_expect_kgood_df.to_excel(writer, tag)
