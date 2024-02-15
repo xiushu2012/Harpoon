@@ -88,7 +88,7 @@ def get_akshare_valanaly(stock,end):
 	return outfile,shname
 
 def getkellybEx(value,expval,maxval,ltyear):
-	# 赔率=获胜时的盈利/失败时的亏损(利息的损失)
+	# 赔率=获胜时的盈利/失败时的利息损失
 	# 利息损失 = (value*(1+大额存单利率)**2 -value) - (value*(1+到期利率)**2 - value)
 	deficit = value*(1+0.03)**ltyear - expval
 	kellyb = 0.01
@@ -284,7 +284,7 @@ def select_interest_some(writer,bond_expect_df,tag):
 		bond_expect_df.to_excel(writer, tag)
 		optimaltag = 'opt-'+ tag;
 		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 3.0) & (bond_expect_df['下注比例'] >= 0.5) & (bond_expect_df['交易周期'] >= 1)]
-		bond_expect_selected_df = bond_expect_selected_df.sort_values('保底涨幅', ascending=False)
+		bond_expect_selected_df = bond_expect_selected_df.sort_values('交易周期', ascending=False)
 		bond_expect_selected_df.to_excel(writer, optimaltag)
 
 if __name__=='__main__':
@@ -365,9 +365,9 @@ if __name__=='__main__':
 				valguess = pricevalue*(1+abnrate/100)	
 				print("guess abnormal counts per year:%f,guess abnormal price:%f,guess abnormal rate per year:%f" % (cntguess,valguess,abnrate)) 
 				
-				#赔率2=各次异动条件下最大盈利中位数/失败时的最大亏损
+				#赔率2=各次异动条件下最大盈利中位数/失败时利息损失
 				abnval = valguess
-				kellyb1 = getkellybEx(pricevalue,expval,abnval,6-tradeyear)  
+				kellyb1 = getkellybEx(pricevalue,expval,abnval,6-tradeyear) 
 				print("abnormalhighmiddle:%f" % abnval)
 
 				#250个交易日

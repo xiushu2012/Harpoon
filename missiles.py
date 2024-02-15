@@ -88,7 +88,7 @@ def get_akshare_valanaly(stock,end):
 	return outfile,shname
 
 def getkellybEx(value,expval,maxval,ltyear):
-	# 赔率=获胜时的盈利/失败时的亏损(利息的损失)
+	# 赔率=获胜时的盈利/失败时的利息损失
 	# 利息损失 = (value*(1+大额存单利率)**2 -value) - (value*(1+到期利率)**2 - value)
 	deficit = value*(1+0.03)**ltyear - expval
 	kellyb = 0.01
@@ -287,7 +287,7 @@ def select_interest_some(writer,bond_expect_df,tag):
 		bond_expect_df.to_excel(writer, tag)
 		optimaltag = 'opt-'+ tag;
 		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 2.0) & (bond_expect_df['下注比例'] >= 0.3) & (bond_expect_df['交易周期'] >= 1)]
-		bond_expect_selected_df = bond_expect_selected_df.sort_values('保底涨幅', ascending=False)
+		bond_expect_selected_df = bond_expect_selected_df.sort_values('交易周期', ascending=False)
 		bond_expect_selected_df.to_excel(writer, optimaltag)
 
 def calc_value_center():
@@ -351,7 +351,7 @@ if __name__=='__main__':
 			print("totalcounts,wincounts,distancetval,datevalue :",totalcounts,wincounts,distancetval,datevalue)
 			#胜率=成功总次数/(成功总次数+失败总次数)
 			kellyp = wincounts / totalcounts
-			#赔率=赎回时的盈利/失败时的最大亏损
+			#赔率=赎回时的盈利/失败时利息损失
 			kellyb = getkellybEx(pricevalue,expval,150,6-tradeyear)
 			
 			#下注比例
