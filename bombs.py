@@ -113,6 +113,45 @@ def get_dailyinc_df(path,name,ratio):
 	bond_cov_biginc_df = bond_cov_dailyinc_df[ bond_cov_dailyinc_df[ratio] > 0.03]
 	return bond_cov_biginc_df
 
+def get_crash_dbscan_df(path,name):
+	bond_cov_crash_df = pd.read_excel(path, name)[['date','open','high','low','close','volume']]
+	bond_cov_crash_df = bond_cov_crash_df[ bond_cov_crash_df['open'] < 121 ]
+	bond_cov_crash_df['crash'] = bond_cov_crash_df.apply(lambda row: 100*(row['low']-row['open'])/row['open'], axis=1)
+
+	#print(bond_cov_crash_df)
+	crashsta = bond_cov_crash_df['crash'].describe(percentiles = [0.3,0.7])
+	crashlow =  crashsta['30%']
+	crashhigh = crashsta['70%']
+	middle_crash_df = bond_cov_crash_df[ (bond_cov_crash_df[['crash']] < crashhigh) & (bond_cov_crash_df[['crash']] > crashlow)]
+	
+	middlesta = middle_crash_df['crash'].describe()
+
+	middlepes = middlesta['std']
+	print("crashlow:%f,crashhigh:%f,EPS:%f" %(crashlow,crashhigh,middlepes))
+	
+	#first cluster to find abnormal days
+	outlier_det=DBSCAN(min_samples=2,eps=middlepes)
+	clusters = outlier_det.fit_predict(bond_cov_crash_df[['crash']].values)
+	print("abnormal crash count:%d" % list(clusters).count(-1))
+	bond_cov_crash_df['flag'] = clusters
+
+	
+	bond_cov_collapse_df = bond_cov_crash_df[ bond_cov_crash_df['flag'] == -1]
+	
+	#second cluster to cut abnormaldays to several paragraph
+	bond_cov_collapse_df['ts'] = bond_cov_collapse_df.apply(lambda row: time.mktime(time.strptime(str(row['date']),"%Y-%m-%d %H:%M:%S")), axis=1)
+	#print(bond_cov_collapse_df[['ts']].values)
+	abnlier_det=DBSCAN(min_samples=2,eps=7*86400)
+	bond_cov_collapse_df['type'] = abnlier_det.fit_predict(bond_cov_collapse_df[['ts']].values)
+	#print(abnormal_df['type'])
+	
+	if not os.path.exists(path):
+		bond_cov_collapse_df.to_excel(writer, 'crash')
+	else:
+		with pd.ExcelWriter(path,engine='openpyxl',mode='a',if_sheet_exists='replace') as writer:
+			bond_cov_collapse_df.to_excel(writer, 'crash')	
+	return bond_cov_collapse_df
+
 def get_abnormal_dbscan_df(path,name):
 	bond_cov_volume_df = pd.read_excel(path, name)[['date','open','high','low','close','volume']]
 	volumesta = bond_cov_volume_df['volume'].describe(percentiles = [0.3,0.7])
@@ -127,7 +166,7 @@ def get_abnormal_dbscan_df(path,name):
 	#first cluster to find abnormal days
 	outlier_det=DBSCAN(min_samples=2,eps=middlepes)
 	clusters = outlier_det.fit_predict(bond_cov_volume_df[['volume']].values)
-	print("abnormal volumn:%d" % list(clusters).count(-1))
+	print("abnormal volumn count:%d" % list(clusters).count(-1))
 	bond_cov_volume_df['flag'] = clusters
 
 	
@@ -272,7 +311,7 @@ if __name__=='__main__':
 		
 			
 		bond_interest_df = pd.read_excel(interestpath, 'clause')
-		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例','纯债溢价率','当前价格','参考估价','保底涨幅','保底价格','00分位', '50分位', '100分位' ,'剩余规模','交易周期','年均异动','最后异动','异动阈值','异动涨幅'])
+		bond_kelly_df = pd.DataFrame(columns=['名称', '代码', '胜率', '赔率', '下注比例','纯债溢价率','当前价格','参考估价','保底涨幅','保底价格','00分位', '50分位', '100分位' ,'剩余规模','交易周期','年均异动','最后异动','异动阈值','异动涨幅','最后崩溃','崩溃阈值'])
 		money = 'money'
 		ratio = 'ratio'
 		for i, bondrow in bond_interest_df.iterrows():
@@ -317,6 +356,10 @@ if __name__=='__main__':
 
 			#异动指标
 			try:
+				bond_cov_collapse_df  = get_crash_dbscan_df(resultpath,insheetname)
+				collapselatest = bond_cov_collapse_df.iloc[-1][0]
+				collapseminvol = np.max(bond_cov_collapse_df['crash'])
+				
 				bond_cov_abnormal_df = get_abnormal_dbscan_df(resultpath,insheetname)
 				cntguess,abnrate= guess_abnormal_parameter_additional(bond_cov_abnormal_df,tradeyear)
 				valguess = pricevalue*(1+abnrate/100)	
@@ -344,7 +387,8 @@ if __name__=='__main__':
 			
 			bond_kelly_df = pd.concat([bond_kelly_df,pd.DataFrame({'名称':[name],'代码':[bond],'胜率':[kellyp],'赔率':[kellyb1],'下注比例':[kellyf1],'纯债溢价率':[prerate],
 			'当前价格':[pricevalue],'参考估价':[abnval],'保底涨幅':[exppercent],'保底价格':[expval],'00分位':[valuemin],'50分位':[value50],'100分位':[valuemax],'剩余规模':[remain],'交易周期':[tradeyear],
-			'年均异动':[abnormalperyear],'最后异动':[abnormallatest],'异动阈值':[abnormalminvol],'异动涨幅':[abnrate]})],ignore_index=True)
+			'年均异动':[abnormalperyear],'最后异动':[abnormallatest],'异动阈值':[abnormalminvol],'异动涨幅':[abnrate],
+			'最后崩溃':[collapselatest],'崩溃阈值':[collapseminvol]})],ignore_index=True)
 
 
 		#print(bond_kelly_df)
