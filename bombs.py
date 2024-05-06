@@ -142,7 +142,7 @@ def get_crash_dbscan_df(path,name):
 	bond_cov_collapse_df['ts'] = bond_cov_collapse_df.apply(lambda row: time.mktime(time.strptime(str(row['date']),"%Y-%m-%d %H:%M:%S")), axis=1)
 	#print(bond_cov_collapse_df[['ts']].values)
 	abnlier_det=DBSCAN(min_samples=2,eps=7*86400)
-	bond_cov_collapse_df['type'] = abnlier_det.fit_predict(bond_cov_collapse_df[['ts']].values)
+	bond_cov_collapse_df['type'] = abnlier_det.fit_predict(bond_cov_collapse_df[['ts']].values.astype(int))
 	#print(abnormal_df['type'])
 	
 	if not os.path.exists(path):
@@ -191,7 +191,7 @@ def get_abnormal_dbscan_df(path,name):
 	bond_cov_abnormal_df['ts'] = bond_cov_abnormal_df.apply(lambda row: time.mktime(time.strptime(str(row['date']),"%Y-%m-%d %H:%M:%S")), axis=1)
 	#print(abnormal_df[['ts']].values)
 	abnlier_det=DBSCAN(min_samples=2,eps=7*86400)
-	bond_cov_abnormal_df['type'] = abnlier_det.fit_predict(bond_cov_abnormal_df[['ts']].values)
+	bond_cov_abnormal_df['type'] = abnlier_det.fit_predict(bond_cov_abnormal_df[['ts']].values.astype(int))
 	#print(abnormal_df['type'])
 	
 	#print(bond_cov_volume_df)

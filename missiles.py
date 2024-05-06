@@ -110,6 +110,8 @@ def cal_close_inc(volume_df,close):
 
 
 def get_crash_dbscan_df(path,name):
+
+
 	bond_cov_crash_df = pd.read_excel(path, name)[['date','open','high','low','close','volume']]
 	bond_cov_crash_df = bond_cov_crash_df[ bond_cov_crash_df['open'] < 121 ]
 	bond_cov_crash_df['crash'] = bond_cov_crash_df.apply(lambda row: 100*(row['low']-row['open'])/row['open'], axis=1)
@@ -124,22 +126,22 @@ def get_crash_dbscan_df(path,name):
 
 	middlepes = middlesta['std']
 	print("crashlow:%f,crashhigh:%f,EPS:%f" %(crashlow,crashhigh,middlepes))
-	
+
 	#first cluster to find abnormal days
 	outlier_det=DBSCAN(min_samples=2,eps=middlepes)
 	clusters = outlier_det.fit_predict(bond_cov_crash_df[['crash']].values)
 	print("abnormal crash count:%d" % list(clusters).count(-1))
 	bond_cov_crash_df['flag'] = clusters
 
-	
 	bond_cov_collapse_df = bond_cov_crash_df[ bond_cov_crash_df['flag'] == -1]
 	
 	#second cluster to cut abnormaldays to several paragraph
 	bond_cov_collapse_df['ts'] = bond_cov_collapse_df.apply(lambda row: time.mktime(time.strptime(str(row['date']),"%Y-%m-%d %H:%M:%S")), axis=1)
+
 	#print(bond_cov_collapse_df[['ts']].values)
 	abnlier_det=DBSCAN(min_samples=2,eps=7*86400)
-	bond_cov_collapse_df['type'] = abnlier_det.fit_predict(bond_cov_collapse_df[['ts']].values)
-	#print(abnormal_df['type'])
+	#astype(int) sklearn版本1.21
+	bond_cov_collapse_df['type'] = abnlier_det.fit_predict(bond_cov_collapse_df[['ts']].values.astype(int))
 	
 	if not os.path.exists(path):
 		bond_cov_collapse_df.to_excel(writer, 'crash')
@@ -188,7 +190,7 @@ def get_abnormal_dbscan_df(path,name):
 	bond_cov_abnormal_df['ts'] = bond_cov_abnormal_df.apply(lambda row: time.mktime(time.strptime(str(row['date']),"%Y-%m-%d %H:%M:%S")), axis=1)
 	#print(abnormal_df[['ts']].values)
 	abnlier_det=DBSCAN(min_samples=2,eps=7*86400)
-	bond_cov_abnormal_df['type'] = abnlier_det.fit_predict(bond_cov_abnormal_df[['ts']].values)
+	bond_cov_abnormal_df['type'] = abnlier_det.fit_predict(bond_cov_abnormal_df[['ts']].values.astype(int))
 	#print(abnormal_df['type'])
 	
 	#print(bond_cov_volume_df)
