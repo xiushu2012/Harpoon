@@ -87,12 +87,16 @@ def get_pass_days(date):
 		delt = datetime.datetime.now() - datetime.datetime.strptime(date, '%Y%m%d')
 		return delt.days
 
-def select_kgood_some(writer,bond_expect_df,tag):
+def select_kgood_some(writer,bond_expect_df,tag,condition):
     try:
-      bond_expect_kgood_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 5.0) 
+      print("select condition is:" + condition)
+      bond_expect_kgood_df = bond_expect_df
+      if condition == "optbond":
+          bond_expect_kgood_df = bond_expect_df[(bond_expect_df['剩余规模'] <= 5.0) 
                                             & (bond_expect_df['现价'] <= 121.0) 
                                             & (bond_expect_df['剩余年限'] <= 5) 
                                             & (bond_expect_df['剩余年限'] >= 1.5)]
+     
       bond_expect_kgood_df = bond_expect_kgood_df.sort_values('到期税前收益', ascending=False)
       bond_expect_kgood_df = bond_expect_kgood_df[bond_expect_kgood_df['债券评级'].str.contains(r'^A.*?')]
       bond_expect_kgood_df.to_excel(writer, tag)
@@ -113,14 +117,20 @@ if __name__=='__main__':
     from sys import argv
     tnow = ""
     cookie = ""
+    condition = ""
     if len(argv) > 2:
         if argv[1] == '*':
             tnow = datetime.datetime.now()
         else:
             tnow = datetime.datetime.strptime(argv[1], '%Y-%m-%d')
         cookie = argv[2]
+        if len(argv) > 3:
+            condition = argv[3]
+        else:
+            condition = "optbond"
+        
     else:
-        print("please run like 'python harpoon.py [*|2020-07-07 cookie]'")
+        print("please run like 'python harpoon.py [*|2020-07-07 cookie] [allbond|optbond]'")
         print("1.F12或者单击鼠标右键，选择审查元素")
         print("2.点击Console,输入指令 document.cookie,回车即可显示当前页面cookie信息")
         exit(1)
@@ -169,7 +179,7 @@ if __name__=='__main__':
     writer = pd.ExcelWriter(outanalypath)
     bond_expect_sort_df.to_excel(writer,'analyze')
     
-    bond_kgood_df = select_kgood_some(writer, bond_expect_sort_df, 'kgood')
+    bond_kgood_df = select_kgood_some(writer, bond_expect_sort_df, 'kgood',condition)
     bond_kgood_df.to_excel(writer,'selected')
 
     #writer.save()
