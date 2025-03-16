@@ -283,7 +283,7 @@ def select_interest_some(writer,bond_expect_df,tag):
 		bond_expect_df = bond_expect_df.sort_values('下注比例', ascending=False)
 		bond_expect_df.to_excel(writer, tag)
 		optimaltag = 'opt-'+ tag;
-		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 3.0) & (bond_expect_df['下注比例'] >= 0.5) & (bond_expect_df['交易周期'] >= 1)]
+		bond_expect_selected_df = bond_expect_df[(bond_expect_df['年均异动'] >= 3.0) & (bond_expect_df['下注比例'] >= 0.1) & (bond_expect_df['交易周期'] >= 1)]
 		bond_expect_selected_df = bond_expect_selected_df.sort_values('交易周期', ascending=False)
 		bond_expect_selected_df.to_excel(writer, optimaltag)
 
@@ -382,6 +382,10 @@ if __name__=='__main__':
 			#下注比例
 			kellyf1 = ((kellyb1+1)*kellyp-1)/kellyb1
 			print("########胜率:%f,赔率:%f,下注比例:%f########" %(kellyp,kellyb1,kellyf1))
+			#下注比例,对于负赔率或负值结果直接置零
+			if kellyb1 <= 0  or kellyf1 < 0:
+				kellyf1 = 0
+			
 			
 			exppercent = 100*(expval-pricevalue)/pricevalue
 			
