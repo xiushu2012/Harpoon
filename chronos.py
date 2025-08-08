@@ -3,14 +3,36 @@ import pandas as pd
 from datetime import datetime
 import os
 import argparse
+import requests
+from typing import Optional
+from akshare.utils import demjson
+
+def bond_cb_index_jsl_with_cookie(cookie: Optional[str] = None) -> pd.DataFrame:
+    """
+    支持通过cookie获取集思录可转债等权指数数据
+    """
+    url = "https://www.jisilu.cn/webapi/cb/index_history/"
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.164 Safari/537.36",
+    }
+    
+    if cookie:
+        headers["Cookie"] = cookie
+    
+    r = requests.get(url, headers=headers)
+    data_dict = demjson.decode(r.text)["data"]  # type: ignore
+    temp_df = pd.DataFrame(data_dict)
+    return temp_df
 
 # 解析命令行参数
 parser = argparse.ArgumentParser(description='分析可转债等权指数连续下跌区间')
 parser.add_argument('--days', type=int, default=5, help='连续下跌天数阈值，默认为5天')
+parser.add_argument('--cookie', type=str, default=None, help='可选的cookie字符串，用于获取登录用户数据')
 args = parser.parse_args()
 
 # 生成数据文件名（不包含日期，用于存储所有历史数据）
-filename = 'bond_cb_index_jsl_all.xlsx'
+filename = 'index_jsl_all.xlsx'
 
 # 检查文件是否存在
 if os.path.exists(filename):
@@ -24,7 +46,7 @@ if os.path.exists(filename):
     # 获取新数据
     print("开始下载最新数据...")
     try:
-        df_new = ak.bond_cb_index_jsl()
+        df_new = bond_cb_index_jsl_with_cookie(cookie=args.cookie)
     except Exception as e:
         print(f"下载最新数据失败: {e}，使用历史数据进行统计。")
         df = df_existing
@@ -46,7 +68,7 @@ else:
     print(f"未发现历史数据文件，开始下载完整数据...")
     # 获取可转债等权指数历史行情（集思录可转债等权指数）
     try:
-        df = ak.bond_cb_index_jsl()
+        df = bond_cb_index_jsl_with_cookie(cookie=args.cookie)
     except Exception as e:
         print(f"下载完整数据失败: {e}，无法进行统计分析。")
         exit(1)
